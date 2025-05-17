@@ -4,7 +4,9 @@
   "description": "\"# proyek-web-service\"",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "migrate": "npx migrate-mongo up",
+    "rollback": "npx migrate-mongo down"
   },
   "repository": {
     "type": "git",
