@@ -7,6 +7,8 @@ const mongoose = require("mongoose");
 require("dotenv").config();
 const userValidation = require("../validation/user.validation");
 const axios = require("axios");
+const path = require("path");
+const fs = require("fs");
 
 async function isValidRegion(region) {
     try {
@@ -191,7 +193,26 @@ exports.updateProfile = async (req, res) => {
         if (username) updateData.username = username;
         if (region) updateData.region = region;
         if (profilePicture) {
-            updateData.profile_picture = profilePicture.path;
+            // Dapatkan username saat ini jika tidak ada username baru
+            const currentUser = await User.findById(id);
+            const usernameToUse = username || currentUser.username;
+            
+            // Hapus file profile picture lama jika ada
+            if (currentUser.profile_picture) {
+                try {
+                    fs.unlinkSync(currentUser.profile_picture);
+                } catch (error) {
+                    console.log('File lama tidak ditemukan atau sudah dihapus');
+                }
+            }
+
+            // Update path file dengan username
+            const fileExt = path.extname(profilePicture.originalname);
+            const newPath = `uploads/profile_pictures/profile-${usernameToUse}${fileExt}`;
+            
+            // Rename file
+            fs.renameSync(profilePicture.path, newPath);
+            updateData.profile_picture = newPath;
         }
 
         // Update user
