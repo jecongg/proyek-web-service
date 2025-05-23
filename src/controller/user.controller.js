@@ -4,6 +4,18 @@ require("../models/Skin");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 require("dotenv").config();
+const userValidation = require("../validation/user.validation");
+const axios = require("axios");
+
+async function isValidRegion(region) {
+    try {
+        const response = await axios.get(`https://restcountries.com/v3.1/name/${region}`);
+        // Bisa valid jika respons mengandung data negara
+        return response.data && response.data.length > 0;
+    } catch (error) {
+        return false;
+    }
+}
 
 // Ambil semua user (lengkap dengan hero dan skin)
 exports.getAllUsers = async (req, res) => {
@@ -39,7 +51,7 @@ exports.getUserByUsername = async (req, res) => {
                 populate: { path: "id_hero" },
             });
 
-        if (!user) return res.status(404).json({ message: "User not found" });
+        if (!user) return res.status(404).json({ message: "User tidak ditemukan" });
 
         res.json(user);
     } catch (error) {
@@ -50,13 +62,28 @@ exports.getUserByUsername = async (req, res) => {
 
 //Note: Belum selesai
 exports.register = async (req, res) => {
+    // Validasi input dengan Joi
+    const { error } = userValidation.validate(req.body, { abortEarly: false });
+    if (error) {
+        return res.status(400).json({
+            message: "Validasi gagal",
+            errors: error.details.map((err) => err.message),
+        });
+    }
+
     const { username, password, email, gender, region, role } = req.body;
 
     try {
+        //Cek region valid dari API negara
+        const regionValid = await isValidRegion(region);
+        if (!regionValid) {
+            return res.status(400).json({ message: "Region tidak tersedia!" });
+        }
+
         // Cek apakah user sudah ada
         const existingUser = await User.findOne({ email });
         if (existingUser) {
-            return res.status(400).json({ message: "Email already exists" });
+            return res.status(400).json({ message: "Email sudah digunakan" });
         }
 
         // Hash password
@@ -75,9 +102,9 @@ exports.register = async (req, res) => {
         // Simpan ke database
         await newUser.save();
 
-        res.status(201).json({ message: "User registered successfully" });
+        res.status(201).json({ message: "Registrasi user berhasil!", user: newUser });
     } catch (error) {
-        console.error("Error registering user:", error);
+        console.error("Error registrasi user:", error);
         res.status(500).json({ message: "Internal Server Error" });
     }
 };
