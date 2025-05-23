@@ -11,6 +11,10 @@ const skinSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "Hero",
     },
+    isBuyable: {
+        type: Boolean,
+        default: true, // Default: bisa dibeli
+    }
 });
 
 module.exports = mongoose.model("Skin", skinSchema);

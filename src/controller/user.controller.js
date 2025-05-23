@@ -1,6 +1,9 @@
 const User = require("../models/User");
 require("../models/Hero");
 require("../models/Skin");
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcrypt");
+require("dotenv").config();
 
 // Ambil semua user (lengkap dengan hero dan skin)
 exports.getAllUsers = async (req, res) => {
@@ -46,15 +49,82 @@ exports.getUserByUsername = async (req, res) => {
 };
 
 //Note: Belum selesai
-exports.registerUser = async (req, res) => {
+exports.register = async (req, res) => {
+    const { username, password, email, gender, region, role } = req.body;
+
     try {
-        const {  } = req.body;
+        // Cek apakah user sudah ada
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+            return res.status(400).json({ message: "Email already exists" });
+        }
 
-        
+        // Hash password
+        const hashedPassword = await bcrypt.hash(password, 10);
 
-        res.json(user);
+        // Buat user baru
+        const newUser = new User({
+            username,
+            password: hashedPassword,
+            email,
+            gender,
+            region,
+            role: role || "Player", // default ke Player jika tidak diset
+        });
+
+        // Simpan ke database
+        await newUser.save();
+
+        res.status(201).json({ message: "User registered successfully" });
     } catch (error) {
-        console.error("Error register user:", error);
+        console.error("Error registering user:", error);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+};
+
+
+exports.login = async (req, res) => {
+    const { email, password } = req.body;
+
+    try {
+        // Cek apakah user dengan email tersebut ada
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            return res.status(400).json({ message: "Invalid credentials" });
+        }
+
+        // Verifikasi password
+        const isPasswordValid = await bcrypt.compare(password, user.password);
+
+        if (!isPasswordValid) {
+            return res.status(400).json({ message: "Invalid credentials" });
+        }
+
+        // Buat payload JWT
+        const token = jwt.sign(
+            {
+                id: user._id,
+                email: user.email,
+                role: user.role,
+            },
+            process.env.JWT_SECRET || "secret_key", // Simpan di .env
+            { expiresIn: "1d" }
+        );
+
+        // Kirim token dalam response
+        res.json({
+            message: "Login successful",
+            token,
+            user: {
+                id: user._id,
+                username: user.username,
+                email: user.email,
+                role: user.role,
+            },
+        });
+    } catch (error) {
+        console.error("Error during login:", error);
         res.status(500).json({ message: "Internal Server Error" });
     }
 };

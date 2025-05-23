@@ -29,7 +29,8 @@ module.exports = {
         name: 'Dark Knight Alucard',
         diamond_price: 749,
         skin_type: 'Epic',
-        id_hero: heroResult.insertedIds[0] // id Alucard
+        id_hero: heroResult.insertedIds[0], // id Alucard,
+        isBuyable: true
       }
     ]);
 
