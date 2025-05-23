@@ -9,5 +9,6 @@ router.get("/", userController.getAllUsers);
 router.post("/register", userController.register);
 router.post("/login", userController.login);
 router.put("/update/:id", auth, upload.single('profile_picture'), userController.updateProfile);
+router.get("/profile/:id", auth, userController.getPlayerProfile);
 
 module.exports = router;

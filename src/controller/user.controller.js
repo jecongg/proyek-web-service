@@ -3,6 +3,7 @@ require("../models/Hero");
 require("../models/Skin");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
+const mongoose = require("mongoose");
 require("dotenv").config();
 const userValidation = require("../validation/user.validation");
 const axios = require("axios");
@@ -156,6 +157,7 @@ exports.login = async (req, res) => {
     }
 };
 
+//kurang logic diamond
 exports.updateProfile = async (req, res) => {
     try {
         const { id } = req.params;
@@ -209,6 +211,67 @@ exports.updateProfile = async (req, res) => {
         });
     } catch (error) {
         console.error("Error updating profile:", error);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+};
+
+exports.getPlayerProfile = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // Validasi ObjectId
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ 
+                message: "ID tidak valid. Mohon masukkan ID yang benar" 
+            });
+        }
+
+        // Cari user berdasarkan ID
+        const player = await User.findById(id)
+            .select('username diamond battle_point starlight owned_heroes owned_skins')
+            .populate({
+                path: 'owned_heroes',
+                select: 'name role1 role2'
+            })
+            .populate({
+                path: 'owned_skins',
+                select: 'name skin_type',
+                populate: {
+                    path: 'id_hero',
+                    select: 'name'
+                }
+            });
+
+        if (!player) {
+            return res.status(404).json({ message: "Pemain tidak ditemukan" });
+        }
+
+        // Hitung total hero dan skin
+        const totalHeroes = player.owned_heroes.length;
+        const totalSkins = player.owned_skins.length;
+
+        // Format response
+        const response = {
+            username: player.username,
+            diamond: player.diamond,
+            battle_point: player.battle_point,
+            starlight_status: player.starlight,
+            heroes: {
+                total: totalHeroes,
+                list: player.owned_heroes
+            },
+            skins: {
+                total: totalSkins,
+                list: player.owned_skins
+            }
+        };
+
+        res.json({
+            message: "Berhasil mengambil data profil pemain",
+            data: response
+        });
+    } catch (error) {
+        console.error("Error getPlayerProfile:", error);
         res.status(500).json({ message: "Internal Server Error" });
     }
 };
