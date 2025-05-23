@@ -155,3 +155,60 @@ exports.login = async (req, res) => {
         res.status(500).json({ message: "Internal Server Error" });
     }
 };
+
+exports.updateProfile = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { username, region } = req.body;
+        const profilePicture = req.file;
+
+        // Cek apakah user mencoba mengupdate profile mereka sendiri
+        if (req.user._id.toString() !== id) {
+            return res.status(403).json({ 
+                message: "Anda tidak memiliki akses untuk mengupdate profile user lain" 
+            });
+        }
+
+        // Validasi input
+        if (!username && !region && !profilePicture) {
+            return res.status(400).json({
+                message: "Minimal satu field harus diisi: username, region, atau profile_picture"
+            });
+        }
+
+        // Validasi region jika diisi
+        if (region) {
+            const regionValid = await isValidRegion(region);
+            if (!regionValid) {
+                return res.status(400).json({ message: "Region tidak tersedia!" });
+            }
+        }
+
+        // Siapkan data update
+        const updateData = {};
+        if (username) updateData.username = username;
+        if (region) updateData.region = region;
+        if (profilePicture) {
+            updateData.profile_picture = profilePicture.path;
+        }
+
+        // Update user
+        const updatedUser = await User.findByIdAndUpdate(
+            id,
+            updateData,
+            { new: true, runValidators: true }
+        ).select('-password');
+
+        if (!updatedUser) {
+            return res.status(404).json({ message: "User tidak ditemukan" });
+        }
+
+        res.json({
+            message: "Profile berhasil diupdate",
+            user: updatedUser
+        });
+    } catch (error) {
+        console.error("Error updating profile:", error);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+};

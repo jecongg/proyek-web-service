@@ -27,7 +27,8 @@
     "joi": "^17.13.3",
     "joi-objectid": "^4.0.2",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.15.0"
+    "mongoose": "^8.15.0",
+    "multer": "^2.0.0"
   },
   "devDependencies": {
     "migrate-mongo": "^12.1.3"

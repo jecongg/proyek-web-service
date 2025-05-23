@@ -7,6 +7,10 @@ const userSchema = new mongoose.Schema(
         email: String,
         gender: String,
         region: String,
+        profile_picture: {
+            type: String,
+            default: null
+        },
         role: {
             type: String,
             enum: ["Admin", "Player"],
