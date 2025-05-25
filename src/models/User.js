@@ -7,13 +7,10 @@ const userSchema = new mongoose.Schema(
         email: String,
         gender: String,
         region: String,
-<<<<<<< Updated upstream
-=======
         profile_picture: {
             type: String,
             default: null,
         },
->>>>>>> Stashed changes
         role: {
             type: String,
             enum: ["Admin", "Player"],

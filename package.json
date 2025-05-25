@@ -20,11 +20,15 @@
   },
   "homepage": "https://github.com/jecongg/proyek-web-service#readme",
   "dependencies": {
+    "axios": "^1.9.0",
     "bcrypt": "^6.0.0",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
+    "joi": "^17.13.3",
+    "joi-objectid": "^4.0.2",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.15.0"
+    "mongoose": "^8.15.0",
+    "multer": "^2.0.0"
   },
   "devDependencies": {
     "migrate-mongo": "^12.1.3"

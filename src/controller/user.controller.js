@@ -3,7 +3,22 @@ require("../models/Hero");
 require("../models/Skin");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
+const mongoose = require("mongoose");
 require("dotenv").config();
+const userValidation = require("../validation/user.validation");
+const axios = require("axios");
+const path = require("path");
+const fs = require("fs");
+
+async function isValidRegion(region) {
+    try {
+        const response = await axios.get(`https://restcountries.com/v3.1/name/${region}`);
+        // Bisa valid jika respons mengandung data negara
+        return response.data && response.data.length > 0;
+    } catch (error) {
+        return false;
+    }
+}
 
 // Ambil semua user (lengkap dengan hero dan skin)
 exports.getAllUsers = async (req, res) => {
@@ -39,7 +54,7 @@ exports.getUserByUsername = async (req, res) => {
                 populate: { path: "id_hero" },
             });
 
-        if (!user) return res.status(404).json({ message: "User not found" });
+        if (!user) return res.status(404).json({ message: "User tidak ditemukan" });
 
         res.json(user);
     } catch (error) {
@@ -50,13 +65,28 @@ exports.getUserByUsername = async (req, res) => {
 
 //Note: Belum selesai
 exports.register = async (req, res) => {
+    // Validasi input dengan Joi
+    const { error } = userValidation.validate(req.body, { abortEarly: false });
+    if (error) {
+        return res.status(400).json({
+            message: "Validasi gagal",
+            errors: error.details.map((err) => err.message),
+        });
+    }
+
     const { username, password, email, gender, region, role } = req.body;
 
     try {
+        //Cek region valid dari API negara
+        const regionValid = await isValidRegion(region);
+        if (!regionValid) {
+            return res.status(400).json({ message: "Region tidak tersedia!" });
+        }
+
         // Cek apakah user sudah ada
         const existingUser = await User.findOne({ email });
         if (existingUser) {
-            return res.status(400).json({ message: "Email already exists" });
+            return res.status(400).json({ message: "Email sudah digunakan" });
         }
 
         // Hash password
@@ -75,9 +105,9 @@ exports.register = async (req, res) => {
         // Simpan ke database
         await newUser.save();
 
-        res.status(201).json({ message: "User registered successfully" });
+        res.status(201).json({ message: "Registrasi user berhasil!", user: newUser });
     } catch (error) {
-        console.error("Error registering user:", error);
+        console.error("Error registrasi user:", error);
         res.status(500).json({ message: "Internal Server Error" });
     }
 };
@@ -125,6 +155,144 @@ exports.login = async (req, res) => {
         });
     } catch (error) {
         console.error("Error during login:", error);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+};
+
+//kurang logic diamond
+exports.updateProfile = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { username, region } = req.body;
+        const profilePicture = req.file;
+
+        // Cek apakah user mencoba mengupdate profile mereka sendiri
+        if (req.user._id.toString() !== id) {
+            return res.status(403).json({ 
+                message: "Anda tidak memiliki akses untuk mengupdate profile user lain" 
+            });
+        }
+
+        // Validasi input
+        if (!username && !region && !profilePicture) {
+            return res.status(400).json({
+                message: "Minimal satu field harus diisi: username, region, atau profile_picture"
+            });
+        }
+
+        // Validasi region jika diisi
+        if (region) {
+            const regionValid = await isValidRegion(region);
+            if (!regionValid) {
+                return res.status(400).json({ message: "Region tidak tersedia!" });
+            }
+        }
+
+        // Siapkan data update
+        const updateData = {};
+        if (username) updateData.username = username;
+        if (region) updateData.region = region;
+        if (profilePicture) {
+            // Dapatkan username saat ini jika tidak ada username baru
+            const currentUser = await User.findById(id);
+            const usernameToUse = username || currentUser.username;
+            
+            // Hapus file profile picture lama jika ada
+            if (currentUser.profile_picture) {
+                try {
+                    fs.unlinkSync(currentUser.profile_picture);
+                } catch (error) {
+                    console.log('File lama tidak ditemukan atau sudah dihapus');
+                }
+            }
+
+            // Update path file dengan username
+            const fileExt = path.extname(profilePicture.originalname);
+            const newPath = `uploads/profile_pictures/profile-${usernameToUse}${fileExt}`;
+            
+            // Rename file
+            fs.renameSync(profilePicture.path, newPath);
+            updateData.profile_picture = newPath;
+        }
+
+        // Update user
+        const updatedUser = await User.findByIdAndUpdate(
+            id,
+            updateData,
+            { new: true, runValidators: true }
+        ).select('-password');
+
+        if (!updatedUser) {
+            return res.status(404).json({ message: "User tidak ditemukan" });
+        }
+
+        res.json({
+            message: "Profile berhasil diupdate",
+            user: updatedUser
+        });
+    } catch (error) {
+        console.error("Error updating profile:", error);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+};
+
+exports.getPlayerProfile = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // Validasi ObjectId
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ 
+                message: "ID tidak valid. Mohon masukkan ID yang benar" 
+            });
+        }
+
+        // Cari user berdasarkan ID
+        const player = await User.findById(id)
+            .select('username diamond battle_point starlight owned_heroes owned_skins')
+            .populate({
+                path: 'owned_heroes',
+                select: 'name role1 role2'
+            })
+            .populate({
+                path: 'owned_skins',
+                select: 'name skin_type',
+                populate: {
+                    path: 'id_hero',
+                    select: 'name'
+                }
+            });
+
+        if (!player) {
+            return res.status(404).json({ message: "Pemain tidak ditemukan" });
+        }
+
+        // Hitung total hero dan skin
+        const totalHeroes = player.owned_heroes.length;
+        const totalSkins = player.owned_skins.length;
+
+        // Format response
+        const response = {
+            username: player.username,
+            diamond: player.diamond,
+            battle_point: player.battle_point,
+            starlight_status: player.starlight,
+            heroes: {
+                total: totalHeroes,
+                list: player.owned_heroes
+            },
+            skins: {
+                total: totalSkins,
+                list: player.owned_skins
+            }
+        };
+
+        res.json({
+            message: "Berhasil mengambil data profil pemain",
+            data: response
+        });
+    } catch (error) {
+        console.error("Error getPlayerProfile:", error);
         res.status(500).json({ message: "Internal Server Error" });
     }
 };
