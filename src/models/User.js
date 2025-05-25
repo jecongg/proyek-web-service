@@ -7,6 +7,13 @@ const userSchema = new mongoose.Schema(
         email: String,
         gender: String,
         region: String,
+<<<<<<< Updated upstream
+=======
+        profile_picture: {
+            type: String,
+            default: null,
+        },
+>>>>>>> Stashed changes
         role: {
             type: String,
             enum: ["Admin", "Player"],
@@ -19,7 +26,10 @@ const userSchema = new mongoose.Schema(
             type: Boolean,
             default: false,
         },
-        battle_point: Number,
+        battle_point: {
+            type: Number,
+            default: 0,
+        },
 
         // Relasi ke hero dan skin (referensi)
         owned_heroes: [
@@ -32,6 +42,19 @@ const userSchema = new mongoose.Schema(
             {
                 type: mongoose.Schema.Types.ObjectId,
                 ref: "Skin",
+            },
+        ],
+        cart: [
+            {
+                item_id: mongoose.Schema.Types.ObjectId,
+                item_type: {
+                    type: String,
+                    enum: ["Hero", "Skin"],
+                },
+                addedAt: {
+                    type: Date,
+                    default: Date.now,
+                },
             },
         ],
     },

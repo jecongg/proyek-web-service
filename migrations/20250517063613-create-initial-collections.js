@@ -39,7 +39,7 @@ module.exports = {
       username: 'player1',
       password: 'hashed_password', // sebaiknya hash kalau production
       email: 'player1@example.com',
-      gender: 'M',
+      gender: 'Male',
       region: 'Indonesia',
       role: 'Player',
       diamond: 100,
@@ -53,7 +53,8 @@ module.exports = {
         skinResult.insertedIds[0] // Skin Alucard
       ],
       createdAt: new Date(),
-      updatedAt: new Date()
+      updatedAt: new Date(),
+      
     });
   },
 

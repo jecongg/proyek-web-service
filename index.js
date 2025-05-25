@@ -3,6 +3,8 @@ const mongoose = require("mongoose");
 
 const userRoutes = require("./src/routes/user.route");
 const skinRoutes = require("./src/routes/skin.route");
+const heroRoutes = require("./src/routes/hero.route");
+const cartRoutes = require("./src/routes/cart.route");
 
 const app = express();
 app.use(express.json());
@@ -10,6 +12,8 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use("/users", userRoutes);
 app.use("/skins", skinRoutes);
+app.use("/heroes", heroRoutes);
+app.use("/cart", cartRoutes);
 
 async function main() {
   try {
