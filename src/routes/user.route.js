@@ -10,5 +10,6 @@ router.post("/register", userController.register);
 router.post("/login", userController.login);
 router.put("/update/:id", [authJwt.verifyToken], upload, handleMulterError, userController.updateProfile);
 router.get("/profile/:id", [authJwt.verifyToken], userController.getPlayerProfile);
+router.post("/play", [authJwt.verifyToken], userController.play);
 
 module.exports = router;

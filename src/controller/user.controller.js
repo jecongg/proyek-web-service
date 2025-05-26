@@ -1,5 +1,5 @@
 const User = require("../models/User");
-require("../models/Hero");
+const Hero = require("../models/Hero");
 require("../models/Skin");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
@@ -9,6 +9,7 @@ const userValidation = require("../validation/user.validation");
 const axios = require("axios");
 const path = require("path");
 const fs = require("fs");
+const Match = require("../models/Match");
 
 async function isValidRegion(region) {
     try {
@@ -92,6 +93,14 @@ exports.register = async (req, res) => {
         // Hash password
         const hashedPassword = await bcrypt.hash(password, 10);
 
+        // Dapatkan ID hero Alucard dan Layla
+        const alucard = await Hero.findOne({ name: 'Alucard' });
+        const layla = await Hero.findOne({ name: 'Layla' });
+
+        if (!alucard || !layla) {
+            return res.status(500).json({ message: "Hero default tidak ditemukan" });
+        }
+
         // Buat user baru
         const newUser = new User({
             username,
@@ -100,6 +109,7 @@ exports.register = async (req, res) => {
             gender,
             region,
             role: role || "Player", // default ke Player jika tidak diset
+            owned_heroes: [alucard._id, layla._id] // Tambahkan Alucard dan Layla
         });
 
         // Simpan ke database
@@ -249,7 +259,7 @@ exports.getPlayerProfile = async (req, res) => {
 
         // Cari user berdasarkan ID
         const player = await User.findById(id)
-            .select('username diamond battle_point starlight owned_heroes owned_skins')
+            .select('username diamond battle_point experience level starlight owned_heroes owned_skins')
             .populate({
                 path: 'owned_heroes',
                 select: 'name role1 role2'
@@ -271,11 +281,24 @@ exports.getPlayerProfile = async (req, res) => {
         const totalHeroes = player.owned_heroes.length;
         const totalSkins = player.owned_skins.length;
 
+        // Hitung XP untuk level berikutnya
+        const xpForNextLevel = player.level * 1000; // Contoh: level 1 butuh 1000 XP, level 2 butuh 2000 XP, dst
+        const xpProgress = player.experience % xpForNextLevel;
+        const xpPercentage = Math.floor((xpProgress / xpForNextLevel) * 100);
+
         // Format response
         const response = {
             username: player.username,
             diamond: player.diamond,
             battle_point: player.battle_point,
+            experience: {
+                current: player.experience,
+                level: player.level,
+                next_level: player.level + 1,
+                xp_for_next_level: xpForNextLevel,
+                current_xp: xpProgress,
+                percentage: xpPercentage
+            },
             starlight_status: player.starlight,
             heroes: {
                 total: totalHeroes,
@@ -293,6 +316,182 @@ exports.getPlayerProfile = async (req, res) => {
         });
     } catch (error) {
         console.error("Error getPlayerProfile:", error);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+};
+
+// Fungsi untuk mendapatkan random hero dari owned heroes
+async function getRandomHero(ownedHeroes) {
+    const randomIndex = Math.floor(Math.random() * ownedHeroes.length);
+    return ownedHeroes[randomIndex];
+}
+
+
+exports.play = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const currentUser = await User.findById(userId).populate('owned_heroes');
+        
+        if (!currentUser) {
+            return res.status(404).json({ message: "User tidak ditemukan" });
+        }
+
+        if (currentUser.owned_heroes.length === 0) {
+            return res.status(400).json({ message: "Anda belum memiliki hero" });
+        }
+
+        // Dapatkan semua user yang tersedia (exclude current user)
+        const allPlayers = await User.find({ 
+            _id: { $ne: userId },
+            owned_heroes: { $exists: true, $ne: [] }
+        })
+        .select('username owned_heroes');
+
+        if (allPlayers.length < 9) {
+            return res.status(400).json({ message: "Tidak cukup pemain untuk memulai permainan" });
+        }
+
+        // Acak urutan player
+        const shuffledPlayers = allPlayers.sort(() => Math.random() - 0.5);
+
+        // Bagi menjadi 2 tim (4 untuk team A, 5 untuk team B)
+        const teamAPlayers = shuffledPlayers.slice(0, 4);
+        const teamBPlayers = shuffledPlayers.slice(4);
+
+        // Random pilih hero untuk setiap pemain
+        const matchPlayers = [];
+        
+        // Hero untuk current user
+        const currentUserHero = await getRandomHero(currentUser.owned_heroes);
+        matchPlayers.push({
+            user: userId,
+            hero: currentUserHero,
+            team: 'A',
+            battle_point_earned: 0,
+            experience_earned: 0
+        });
+
+        // Hero untuk team A players
+        for (const player of teamAPlayers) {
+            const hero = await getRandomHero(player.owned_heroes);
+            matchPlayers.push({
+                user: player._id,
+                hero: hero,
+                team: 'A',
+                battle_point_earned: 0,
+                experience_earned: 0
+            });
+        }
+
+        // Hero untuk team B players
+        for (const player of teamBPlayers) {
+            const hero = await getRandomHero(player.owned_heroes);
+            matchPlayers.push({
+                user: player._id,
+                hero: hero,
+                team: 'B',
+                battle_point_earned: 0,
+                experience_earned: 0
+            });
+        }
+
+        // Random pilih pemenang
+        const winnerTeam = Math.random() < 0.5 ? 'A' : 'B';
+
+        // Set battle point dan experience berdasarkan menang/kalah
+        const winBP = 100;
+        const loseBP = 50;
+        const winXP = 200;
+        const loseXP = 100;
+
+        matchPlayers.forEach(player => {
+            if (player.team === winnerTeam) {
+                player.battle_point_earned = winBP;
+                player.experience_earned = winXP;
+            } else {
+                player.battle_point_earned = loseBP;
+                player.experience_earned = loseXP;
+            }
+        });
+
+        // Simpan match ke database
+        const match = new Match({
+            players: matchPlayers,
+            winner_team: winnerTeam
+        });
+        await match.save();
+
+        // Update battle point, experience, dan level untuk semua pemain
+        for (const player of matchPlayers) {
+            const user = await User.findById(player.user);
+            const newExperience = user.experience + player.experience_earned;
+            const newLevel = Math.floor(newExperience / 1000) + 1;
+
+            await User.findByIdAndUpdate(player.user, {
+                $inc: {
+                    battle_point: player.battle_point_earned,
+                    experience: player.experience_earned
+                },
+                $set: {
+                    level: newLevel
+                }
+            });
+        }
+
+        // Ambil data match yang sudah disimpan dengan populate
+        const populatedMatch = await Match.findById(match._id)
+            .populate({
+                path: 'players.user',
+                select: 'username'
+            })
+            .populate({
+                path: 'players.hero',
+                select: 'name'
+            });
+
+        // Format response untuk current user
+        const currentUserMatchData = populatedMatch.players.find(p => p.user._id.toString() === userId);
+        const teamPlayersData = populatedMatch.players.filter(p => p.team === 'A' && p.user._id.toString() !== userId);
+        const enemyPlayersData = populatedMatch.players.filter(p => p.team === 'B');
+
+        // Hitung XP untuk level berikutnya
+        const updatedUser = await User.findById(userId);
+        const xpForNextLevel = updatedUser.level * 1000;
+        const xpProgress = updatedUser.experience % xpForNextLevel;
+
+        res.json({
+            message: "Permainan selesai",
+            result: {
+                status: currentUserMatchData.team === winnerTeam ? "Menang" : "Kalah",
+                battle_point_earned: currentUserMatchData.battle_point_earned,
+                experience: {
+                    earned: currentUserMatchData.experience_earned,
+                    current_xp: updatedUser.experience,
+                    level: updatedUser.level,
+                    next_level: updatedUser.level + 1,
+                    xp_for_next_level: xpForNextLevel,
+                },
+                players: {
+                    team_a: [
+                        {
+                            username: currentUser.username,
+                            hero: currentUserMatchData.hero.name
+                        },
+                        ...teamPlayersData.map(p => ({
+                            username: p.user.username,
+                            hero: p.hero.name
+                        }))
+                    ],
+                    team_b: enemyPlayersData.map(p => ({
+                        username: p.user.username,
+                        hero: p.hero.name
+                    }))
+                }
+            }
+        });
+
+    } catch (error) {
+        console.error("Error during play:", error);
         res.status(500).json({ message: "Internal Server Error" });
     }
 };

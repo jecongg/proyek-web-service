@@ -2,11 +2,29 @@ const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema(
     {
-        username: String,
-        password: String,
-        email: String,
-        gender: String,
-        region: String,
+        username: {
+            type: String,
+            required: true,
+            unique: true
+        },
+        password: {
+            type: String,
+            required: true
+        },
+        email: {
+            type: String,
+            required: true,
+            unique: true
+        },
+        gender: {
+            type: String,
+            enum: ['Male', 'Female', 'Other'],
+            required: true
+        },
+        region: {
+            type: String,
+            required: true
+        },
         profile_picture: {
             type: String,
             default: null
@@ -14,6 +32,7 @@ const userSchema = new mongoose.Schema(
         role: {
             type: String,
             enum: ["Admin", "Player"],
+            default: 'Player'
         },
         diamond: {
             type: Number,
@@ -23,8 +42,23 @@ const userSchema = new mongoose.Schema(
             type: Boolean,
             default: false,
         },
+<<<<<<< Updated upstream
         battle_point: Number,
 
+=======
+        battle_point: {
+            type: Number,
+            default: 0,
+        },
+        experience: {
+            type: Number,
+            default: 0
+        },
+        level: {
+            type: Number,
+            default: 1
+        },
+>>>>>>> Stashed changes
         // Relasi ke hero dan skin (referensi)
         owned_heroes: [
             {
