@@ -46,8 +46,6 @@ const userSchema = new mongoose.Schema(
             type: Number,
             default: 0,
         },
-
-=======
         battle_point: {
             type: Number,
             default: 0,
@@ -60,8 +58,6 @@ const userSchema = new mongoose.Schema(
             type: Number,
             default: 1
         },
->>>>>>> Stashed changes
-        // Relasi ke hero dan skin (referensi)
         owned_heroes: [
             {
                 type: mongoose.Schema.Types.ObjectId,
