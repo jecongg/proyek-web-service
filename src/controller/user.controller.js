@@ -190,11 +190,58 @@ exports.updateProfile = async (req, res) => {
             });
         }
 
-        // Validasi region jika diisi
+        // Ambil data user saat ini
+        const currentUser = await User.findById(id);
+        if (!currentUser) {
+            return res.status(404).json({ message: "User tidak ditemukan" });
+        }
+
+        // Validasi dan proses update username
+        if (username) {
+            if (username !== currentUser.username) {
+                // Cek diamond untuk ganti username
+                if (currentUser.diamond < 239) {
+                    return res.status(400).json({ 
+                        message: "Diamond tidak cukup untuk mengganti username. Diperlukan 239 diamond." 
+                    });
+                }
+                // Kurangi diamond
+                currentUser.diamond -= 239;
+            }
+        }
+
+        // Validasi dan proses update region
         if (region) {
             const regionValid = await isValidRegion(region);
             if (!regionValid) {
                 return res.status(400).json({ message: "Region tidak tersedia!" });
+            }
+
+            if (region !== currentUser.region) {
+                // Cek diamond untuk ganti region
+                if (currentUser.diamond < 300) {
+                    return res.status(400).json({ 
+                        message: "Diamond tidak cukup untuk mengganti region. Diperlukan 300 diamond." 
+                    });
+                }
+
+                // Cek waktu terakhir update region
+                if (currentUser.last_region_update) {
+                    const lastUpdate = new Date(currentUser.last_region_update);
+                    const now = new Date();
+                    const monthsDiff = (now.getFullYear() - lastUpdate.getFullYear()) * 12 + 
+                                     (now.getMonth() - lastUpdate.getMonth());
+                    
+                    if (monthsDiff < 3) {
+                        return res.status(400).json({ 
+                            message: "Anda harus menunggu 3 bulan dari perubahan region terakhir" 
+                        });
+                    }
+                }
+
+                // Kurangi diamond dan update waktu terakhir
+                currentUser.diamond -= 300;
+                currentUser.last_region_update = new Date();
             }
         }
 
@@ -204,7 +251,6 @@ exports.updateProfile = async (req, res) => {
         if (region) updateData.region = region;
         if (profilePicture) {
             // Dapatkan username saat ini jika tidak ada username baru
-            const currentUser = await User.findById(id);
             const usernameToUse = username || currentUser.username;
             
             // Hapus file profile picture lama jika ada
@@ -225,16 +271,17 @@ exports.updateProfile = async (req, res) => {
             updateData.profile_picture = newPath;
         }
 
+        // Update diamond jika ada perubahan
+        if (username !== currentUser.username || region !== currentUser.region) {
+            updateData.diamond = currentUser.diamond;
+        }
+
         // Update user
         const updatedUser = await User.findByIdAndUpdate(
             id,
             updateData,
             { new: true, runValidators: true }
         ).select('-password');
-
-        if (!updatedUser) {
-            return res.status(404).json({ message: "User tidak ditemukan" });
-        }
 
         res.json({
             message: "Profile berhasil diupdate",
@@ -354,9 +401,9 @@ exports.play = async (req, res) => {
         // Acak urutan player
         const shuffledPlayers = allPlayers.sort(() => Math.random() - 0.5);
 
-        // Bagi menjadi 2 tim (4 untuk team A, 5 untuk team B)
-        const teamAPlayers = shuffledPlayers.slice(0, 4);
-        const teamBPlayers = shuffledPlayers.slice(4);
+        // Bagi menjadi 2 tim (5 untuk team A, 5 untuk team B)
+        const teamAPlayers = shuffledPlayers.slice(0, 4); // 4 player + current user = 5
+        const teamBPlayers = shuffledPlayers.slice(4, 9); // 5 player
 
         // Random pilih hero untuk setiap pemain
         const matchPlayers = [];
@@ -398,19 +445,21 @@ exports.play = async (req, res) => {
         // Random pilih pemenang
         const winnerTeam = Math.random() < 0.5 ? 'A' : 'B';
 
-        // Set battle point dan experience berdasarkan menang/kalah
-        const winBP = 100;
-        const loseBP = 50;
-        const winXP = 200;
-        const loseXP = 100;
+        // Fungsi untuk mendapatkan random number dalam range
+        function getRandomNumber(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
 
+        // Set battle point dan experience berdasarkan menang/kalah
         matchPlayers.forEach(player => {
             if (player.team === winnerTeam) {
-                player.battle_point_earned = winBP;
-                player.experience_earned = winXP;
+                // Range untuk menang: BP 80-120, XP 150-250
+                player.battle_point_earned = getRandomNumber(80, 120);
+                player.experience_earned = getRandomNumber(150, 250);
             } else {
-                player.battle_point_earned = loseBP;
-                player.experience_earned = loseXP;
+                // Range untuk kalah: BP 30-50, XP 50-100
+                player.battle_point_earned = getRandomNumber(30, 50);
+                player.experience_earned = getRandomNumber(50, 100);
             }
         });
 
