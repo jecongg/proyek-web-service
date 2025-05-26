@@ -354,9 +354,9 @@ exports.play = async (req, res) => {
         // Acak urutan player
         const shuffledPlayers = allPlayers.sort(() => Math.random() - 0.5);
 
-        // Bagi menjadi 2 tim (4 untuk team A, 5 untuk team B)
-        const teamAPlayers = shuffledPlayers.slice(0, 4);
-        const teamBPlayers = shuffledPlayers.slice(4);
+        // Bagi menjadi 2 tim (5 untuk team A, 5 untuk team B)
+        const teamAPlayers = shuffledPlayers.slice(0, 4); // 4 player + current user = 5
+        const teamBPlayers = shuffledPlayers.slice(4, 9); // 5 player
 
         // Random pilih hero untuk setiap pemain
         const matchPlayers = [];
@@ -398,19 +398,21 @@ exports.play = async (req, res) => {
         // Random pilih pemenang
         const winnerTeam = Math.random() < 0.5 ? 'A' : 'B';
 
-        // Set battle point dan experience berdasarkan menang/kalah
-        const winBP = 100;
-        const loseBP = 50;
-        const winXP = 200;
-        const loseXP = 100;
+        // Fungsi untuk mendapatkan random number dalam range
+        function getRandomNumber(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
 
+        // Set battle point dan experience berdasarkan menang/kalah
         matchPlayers.forEach(player => {
             if (player.team === winnerTeam) {
-                player.battle_point_earned = winBP;
-                player.experience_earned = winXP;
+                // Range untuk menang: BP 80-120, XP 150-250
+                player.battle_point_earned = getRandomNumber(80, 120);
+                player.experience_earned = getRandomNumber(150, 250);
             } else {
-                player.battle_point_earned = loseBP;
-                player.experience_earned = loseXP;
+                // Range untuk kalah: BP 30-50, XP 50-100
+                player.battle_point_earned = getRandomNumber(30, 50);
+                player.experience_earned = getRandomNumber(50, 100);
             }
         });
 
