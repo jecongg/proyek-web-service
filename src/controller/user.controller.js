@@ -190,11 +190,58 @@ exports.updateProfile = async (req, res) => {
             });
         }
 
-        // Validasi region jika diisi
+        // Ambil data user saat ini
+        const currentUser = await User.findById(id);
+        if (!currentUser) {
+            return res.status(404).json({ message: "User tidak ditemukan" });
+        }
+
+        // Validasi dan proses update username
+        if (username) {
+            if (username !== currentUser.username) {
+                // Cek diamond untuk ganti username
+                if (currentUser.diamond < 239) {
+                    return res.status(400).json({ 
+                        message: "Diamond tidak cukup untuk mengganti username. Diperlukan 239 diamond." 
+                    });
+                }
+                // Kurangi diamond
+                currentUser.diamond -= 239;
+            }
+        }
+
+        // Validasi dan proses update region
         if (region) {
             const regionValid = await isValidRegion(region);
             if (!regionValid) {
                 return res.status(400).json({ message: "Region tidak tersedia!" });
+            }
+
+            if (region !== currentUser.region) {
+                // Cek diamond untuk ganti region
+                if (currentUser.diamond < 300) {
+                    return res.status(400).json({ 
+                        message: "Diamond tidak cukup untuk mengganti region. Diperlukan 300 diamond." 
+                    });
+                }
+
+                // Cek waktu terakhir update region
+                if (currentUser.last_region_update) {
+                    const lastUpdate = new Date(currentUser.last_region_update);
+                    const now = new Date();
+                    const monthsDiff = (now.getFullYear() - lastUpdate.getFullYear()) * 12 + 
+                                     (now.getMonth() - lastUpdate.getMonth());
+                    
+                    if (monthsDiff < 3) {
+                        return res.status(400).json({ 
+                            message: "Anda harus menunggu 3 bulan dari perubahan region terakhir" 
+                        });
+                    }
+                }
+
+                // Kurangi diamond dan update waktu terakhir
+                currentUser.diamond -= 300;
+                currentUser.last_region_update = new Date();
             }
         }
 
@@ -204,7 +251,6 @@ exports.updateProfile = async (req, res) => {
         if (region) updateData.region = region;
         if (profilePicture) {
             // Dapatkan username saat ini jika tidak ada username baru
-            const currentUser = await User.findById(id);
             const usernameToUse = username || currentUser.username;
             
             // Hapus file profile picture lama jika ada
@@ -225,16 +271,17 @@ exports.updateProfile = async (req, res) => {
             updateData.profile_picture = newPath;
         }
 
+        // Update diamond jika ada perubahan
+        if (username !== currentUser.username || region !== currentUser.region) {
+            updateData.diamond = currentUser.diamond;
+        }
+
         // Update user
         const updatedUser = await User.findByIdAndUpdate(
             id,
             updateData,
             { new: true, runValidators: true }
         ).select('-password');
-
-        if (!updatedUser) {
-            return res.status(404).json({ message: "User tidak ditemukan" });
-        }
 
         res.json({
             message: "Profile berhasil diupdate",
