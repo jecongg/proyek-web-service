@@ -80,8 +80,23 @@ const userSchema = new mongoose.Schema(
                 },
             },
         ],
+        isDeleted: {
+            type: Boolean,
+            default: false,
+        },
+        deletedAt: {
+            type: Date,
+            default: null,
+        },
     },
     { timestamps: true }
 );
+
+userSchema.set("toJSON", {
+  transform: function (doc, ret) {
+    delete ret.__v;
+    return ret;
+  },
+});
 
 module.exports = mongoose.model("User", userSchema);

@@ -27,6 +27,9 @@
     "joi": "^17.13.3",
     "joi-objectid": "^4.0.2",
     "jsonwebtoken": "^9.0.2",
+    "mongo": "^0.1.0",
+    "mongod": "^2.0.0",
+    "mongodb": "^6.16.0",
     "mongoose": "^8.15.0",
     "multer": "^2.0.0"
   },
