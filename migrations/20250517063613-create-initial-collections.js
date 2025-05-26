@@ -830,11 +830,7 @@ module.exports = {
         skinResult.insertedIds[0] // Skin Alucard
       ],
       createdAt: new Date(),
-<<<<<<< Updated upstream
       updatedAt: new Date()
-=======
-      updatedAt: new Date(),
->>>>>>> Stashed changes
     });
 
     // Insert 10 dummy users
