@@ -167,7 +167,7 @@ exports.updateProfile = async (req, res) => {
         const profilePicture = req.file;
 
         // Cek apakah user mencoba mengupdate profile mereka sendiri
-        if (req.user._id.toString() !== id) {
+        if (req.user.id.toString() != id) {
             return res.status(403).json({ 
                 message: "Anda tidak memiliki akses untuk mengupdate profile user lain" 
             });
