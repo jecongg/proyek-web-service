@@ -1,9 +1,10 @@
 module.exports = {
-  async up(db, client) {
-    // Buat collections
-    await db.createCollection('users');
-    await db.createCollection('heroes');
-    await db.createCollection('skins');
+    async up(db, client) {
+        // Buat collections
+        await db.createCollection("users");
+        await db.createCollection("heroes");
+        await db.createCollection("skins");
+        await db.createCollection("payment_history"); // Tambahan
 
     // Insert data hero
     const heroResult = await db.collection('heroes').insertMany([
@@ -976,9 +977,21 @@ module.exports = {
     await db.collection('users').insertMany(dummyUsers);
   },
 
-  async down(db, client) {
-    await db.collection('users').drop();
-    await db.collection('heroes').drop();
-    await db.collection('skins').drop();
-  }
+        await db.collection("payment_history").insertOne({
+            user_id: userResult.insertedId,
+            order_id: "order-20250526-0001", // DISIMPAN DI DATABASE
+            total: 100000,
+            payment_method: "gopay",
+            type: "topup",
+            createdAt: new Date(),
+            updatedAt: new Date(),
+        });
+    },
+
+    async down(db, client) {
+        await db.collection("users").drop();
+        await db.collection("heroes").drop();
+        await db.collection("skins").drop();
+        await db.collection("payment_history").drop();
+    },
 };
