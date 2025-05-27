@@ -1001,16 +1001,6 @@ module.exports = {
         ];
 
         await db.collection("users").insertMany(dummyUsers);
-
-        await db.collection("payment_history").insertOne({
-            user_id: userResult.insertedId,
-            order_id: "order-20250526-0001", // DISIMPAN DI DATABASE
-            total: 100000,
-            payment_method: "gopay",
-            type: "topup",
-            createdAt: new Date(),
-            updatedAt: new Date(),
-        });
     },
 
     async down(db, client) {

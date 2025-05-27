@@ -1,6 +1,8 @@
+require('dotenv').config();
+
 const config = {
   mongodb: {
-    url: "mongodb://localhost:27017",
+    url: process.env.MONGODB_URI || "mongodb://localhost:27017/mobile_legend_db",
     databaseName: "mobile_legend_db",
     options: {
       useNewUrlParser: true,

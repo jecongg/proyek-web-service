@@ -15,4 +15,8 @@ COPY . .
 EXPOSE 3000
 
 # Jalankan app
-CMD ["npm", "start"]
+# CMD ["npm", "dev"]
+CMD ["npx", "nodemon"]
+
+
+
