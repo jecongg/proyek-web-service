@@ -6,976 +6,1001 @@ module.exports = {
         await db.createCollection("skins");
         await db.createCollection("payment_history"); // Tambahan
 
-    // Insert data hero
-    const heroResult = await db.collection('heroes').insertMany([
-      {
-        name: 'Alucard',
-        diamond_price: 320,
-        battle_point_price: 15000,
-        role1: 'Fighter',
-        role2: 'Assassin'
-      },
-      {
-        name: 'Layla',
-        diamond_price: 250,
-        battle_point_price: 10000,
-        role1: 'Marksman',
-        role2: null
-      },
-      {
-        name: 'Tigreal',
-        diamond_price: 320,
-        battle_point_price: 15000,
-        role1: 'Tank',
-        role2: 'Support'
-      },
-      {
-        name: 'Eudora',
-        diamond_price: 320,
-        battle_point_price: 15000,
-        role1: 'Mage',
-        role2: null
-      },
-      {
-        name: 'Franco',
-        diamond_price: 320,
-        battle_point_price: 15000,
-        role1: 'Tank',
-        role2: 'Support'
-      },
-      {
-        name: 'Miya',
-        diamond_price: 250,
-        battle_point_price: 10000,
-        role1: 'Marksman',
-        role2: null
-      },
-      {
-        name: 'Zilong',
-        diamond_price: 320,
-        battle_point_price: 15000,
-        role1: 'Fighter',
-        role2: 'Assassin'
-      },
-      {
-        name: 'Nana',
-        diamond_price: 320,
-        battle_point_price: 15000,
-        role1: 'Mage',
-        role2: 'Support'
-      },
-      {
-        name: 'Balmond',
-        diamond_price: 320,
-        battle_point_price: 15000,
-        role1: 'Fighter',
-        role2: 'Tank'
-      },
-      {
-        name: 'Alice',
-        diamond_price: 320,
-        battle_point_price: 15000,
-        role1: 'Mage',
-        role2: 'Tank'
-      },
-      {
-        name: 'Grock',
-        diamond_price: 320,
-        battle_point_price: 15000,
-        role1: 'Tank',
-        role2: null
-      },
-      {
-        name: 'Harley',
-        diamond_price: 320,
-        battle_point_price: 15000,
-        role1: 'Mage',
-        role2: 'Assassin'
-      },
-      {
-        name: 'Bruno',
-        diamond_price: 320,
-        battle_point_price: 15000,
-        role1: 'Marksman',
-        role2: null
-      },
-      {
-        name: 'Claude',
-        diamond_price: 320,
-        battle_point_price: 15000,
-        role1: 'Marksman',
-        role2: null
-      },
-      {
-        name: 'Lancelot',
-        diamond_price: 320,
-        battle_point_price: 15000,
-        role1: 'Assassin',
-        role2: 'Fighter'
-      },
-      {
-        name: 'Lesley',
-        diamond_price: 320,
-        battle_point_price: 15000,
-        role1: 'Marksman',
-        role2: 'Assassin'
-      },
-      {
-        name: 'Lunox',
-        diamond_price: 320,
-        battle_point_price: 15000,
-        role1: 'Mage',
-        role2: null
-      },
-      {
-        name: 'Gusion',
-        diamond_price: 320,
-        battle_point_price: 15000,
-        role1: 'Assassin',
-        role2: 'Mage'
-      },
-      {
-        name: 'Khufra',
-        diamond_price: 320,
-        battle_point_price: 15000,
-        role1: 'Tank',
-        role2: null
-      },
-      {
-        name: 'Kadita',
-        diamond_price: 320,
-        battle_point_price: 15000,
-        role1: 'Mage',
-        role2: 'Assassin'
-      },
-      {
-        name: 'Selena',
-        diamond_price: 320,
-        battle_point_price: 15000,
-        role1: 'Mage',
-        role2: 'Assassin'
-      },
-      {
-        name: 'Ling',
-        diamond_price: 320,
-        battle_point_price: 15000,
-        role1: 'Assassin',
-        role2: null
-      },
-      {
-        name: 'Dyrroth',
-        diamond_price: 320,
-        battle_point_price: 15000,
-        role1: 'Fighter',
-        role2: 'Assassin'
-      },
-      {
-        name: 'Lylia',
-        diamond_price: 320,
-        battle_point_price: 15000,
-        role1: 'Mage',
-        role2: null
-      },
-      {
-        name: 'Masha',
-        diamond_price: 320,
-        battle_point_price: 15000,
-        role1: 'Fighter',
-        role2: 'Tank'
-      },
-      {
-        name: 'Baxia',
-        diamond_price: 320,
-        battle_point_price: 15000,
-        role1: 'Tank',
-        role2: null
-      },
-      {
-        name: 'Wanwan',
-        diamond_price: 320,
-        battle_point_price: 15000,
-        role1: 'Marksman',
-        role2: null
-      },
-      {
-        name: 'Silvanna',
-        diamond_price: 320,
-        battle_point_price: 15000,
-        role1: 'Fighter',
-        role2: 'Tank'
-      },
-      {
-        name: 'Atlas',
-        diamond_price: 320,
-        battle_point_price: 15000,
-        role1: 'Tank',
-        role2: 'Support'
-      },
-      {
-        name: 'Popol and Kupa',
-        diamond_price: 320,
-        battle_point_price: 15000,
-        role1: 'Marksman',
-        role2: null
-      },
-      {
-        name: 'Yu Zhong',
-        diamond_price: 320,
-        battle_point_price: 15000,
-        role1: 'Fighter',
-        role2: 'Tank'
-      },
-      {
-        name: 'Luo Yi',
-        diamond_price: 320,
-        battle_point_price: 15000,
-        role1: 'Mage',
-        role2: 'Support'
-      },
-      {
-        name: 'Benedetta',
-        diamond_price: 320,
-        battle_point_price: 15000,
-        role1: 'Assassin',
-        role2: 'Fighter'
-      },
-      {
-        name: 'Barats',
-        diamond_price: 320,
-        battle_point_price: 15000,
-        role1: 'Tank',
-        role2: 'Fighter'
-      },
-      {
-        name: 'Brody',
-        diamond_price: 320,
-        battle_point_price: 15000,
-        role1: 'Marksman',
-        role2: null
-      },
-      {
-        name: 'Yve',
-        diamond_price: 320,
-        battle_point_price: 15000,
-        role1: 'Mage',
-        role2: null
-      },
-      {
-        name: 'Mathilda',
-        diamond_price: 320,
-        battle_point_price: 15000,
-        role1: 'Support',
-        role2: 'Assassin'
-      },
-      {
-        name: 'Paquito',
-        diamond_price: 320,
-        battle_point_price: 15000,
-        role1: 'Fighter',
-        role2: null
-      },
-      {
-        name: 'Beatrix',
-        diamond_price: 320,
-        battle_point_price: 15000,
-        role1: 'Marksman',
-        role2: null
-      },
-      {
-        name: 'Phoveus',
-        diamond_price: 320,
-        battle_point_price: 15000,
-        role1: 'Fighter',
-        role2: null
-      },
-      {
-        name: 'Natan',
-        diamond_price: 320,
-        battle_point_price: 15000,
-        role1: 'Marksman',
-        role2: null
-      },
-      {
-        name: 'Aamon',
-        diamond_price: 320,
-        battle_point_price: 15000,
-        role1: 'Assassin',
-        role2: null
-      },
-      {
-        name: 'Valentina',
-        diamond_price: 320,
-        battle_point_price: 15000,
-        role1: 'Mage',
-        role2: null
-      },
-      {
-        name: 'Edith',
-        diamond_price: 320,
-        battle_point_price: 15000,
-        role1: 'Tank',
-        role2: 'Marksman'
-      },
-      {
-        name: 'Floryn',
-        diamond_price: 320,
-        battle_point_price: 15000,
-        role1: 'Support',
-        role2: null
-      },
-      {
-        name: 'Aulus',
-        diamond_price: 320,
-        battle_point_price: 15000,
-        role1: 'Fighter',
-        role2: null
-      },
-      {
-        name: 'Melissa',
-        diamond_price: 320,
-        battle_point_price: 15000,
-        role1: 'Marksman',
-        role2: null
-      },
-      {
-        name: 'Xavier',
-        diamond_price: 320,
-        battle_point_price: 15000,
-        role1: 'Mage',
-        role2: null
-      },
-      {
-        name: 'Julian',
-        diamond_price: 320,
-        battle_point_price: 15000,
-        role1: 'Fighter',
-        role2: 'Mage'
-      }
-    ]);
+        // Insert data hero
+        const heroResult = await db.collection("heroes").insertMany([
+            {
+                name: "Alucard",
+                diamond_price: 320,
+                battle_point_price: 15000,
+                role1: "Fighter",
+                role2: "Assassin",
+            },
+            {
+                name: "Layla",
+                diamond_price: 250,
+                battle_point_price: 10000,
+                role1: "Marksman",
+                role2: null,
+            },
+            {
+                name: "Tigreal",
+                diamond_price: 320,
+                battle_point_price: 15000,
+                role1: "Tank",
+                role2: "Support",
+            },
+            {
+                name: "Eudora",
+                diamond_price: 320,
+                battle_point_price: 15000,
+                role1: "Mage",
+                role2: null,
+            },
+            {
+                name: "Franco",
+                diamond_price: 320,
+                battle_point_price: 15000,
+                role1: "Tank",
+                role2: "Support",
+            },
+            {
+                name: "Miya",
+                diamond_price: 250,
+                battle_point_price: 10000,
+                role1: "Marksman",
+                role2: null,
+            },
+            {
+                name: "Zilong",
+                diamond_price: 320,
+                battle_point_price: 15000,
+                role1: "Fighter",
+                role2: "Assassin",
+            },
+            {
+                name: "Nana",
+                diamond_price: 320,
+                battle_point_price: 15000,
+                role1: "Mage",
+                role2: "Support",
+            },
+            {
+                name: "Balmond",
+                diamond_price: 320,
+                battle_point_price: 15000,
+                role1: "Fighter",
+                role2: "Tank",
+            },
+            {
+                name: "Alice",
+                diamond_price: 320,
+                battle_point_price: 15000,
+                role1: "Mage",
+                role2: "Tank",
+            },
+            {
+                name: "Grock",
+                diamond_price: 320,
+                battle_point_price: 15000,
+                role1: "Tank",
+                role2: null,
+            },
+            {
+                name: "Harley",
+                diamond_price: 320,
+                battle_point_price: 15000,
+                role1: "Mage",
+                role2: "Assassin",
+            },
+            {
+                name: "Bruno",
+                diamond_price: 320,
+                battle_point_price: 15000,
+                role1: "Marksman",
+                role2: null,
+            },
+            {
+                name: "Claude",
+                diamond_price: 320,
+                battle_point_price: 15000,
+                role1: "Marksman",
+                role2: null,
+            },
+            {
+                name: "Lancelot",
+                diamond_price: 320,
+                battle_point_price: 15000,
+                role1: "Assassin",
+                role2: "Fighter",
+            },
+            {
+                name: "Lesley",
+                diamond_price: 320,
+                battle_point_price: 15000,
+                role1: "Marksman",
+                role2: "Assassin",
+            },
+            {
+                name: "Lunox",
+                diamond_price: 320,
+                battle_point_price: 15000,
+                role1: "Mage",
+                role2: null,
+            },
+            {
+                name: "Gusion",
+                diamond_price: 320,
+                battle_point_price: 15000,
+                role1: "Assassin",
+                role2: "Mage",
+            },
+            {
+                name: "Khufra",
+                diamond_price: 320,
+                battle_point_price: 15000,
+                role1: "Tank",
+                role2: null,
+            },
+            {
+                name: "Kadita",
+                diamond_price: 320,
+                battle_point_price: 15000,
+                role1: "Mage",
+                role2: "Assassin",
+            },
+            {
+                name: "Selena",
+                diamond_price: 320,
+                battle_point_price: 15000,
+                role1: "Mage",
+                role2: "Assassin",
+            },
+            {
+                name: "Ling",
+                diamond_price: 320,
+                battle_point_price: 15000,
+                role1: "Assassin",
+                role2: null,
+            },
+            {
+                name: "Dyrroth",
+                diamond_price: 320,
+                battle_point_price: 15000,
+                role1: "Fighter",
+                role2: "Assassin",
+            },
+            {
+                name: "Lylia",
+                diamond_price: 320,
+                battle_point_price: 15000,
+                role1: "Mage",
+                role2: null,
+            },
+            {
+                name: "Masha",
+                diamond_price: 320,
+                battle_point_price: 15000,
+                role1: "Fighter",
+                role2: "Tank",
+            },
+            {
+                name: "Baxia",
+                diamond_price: 320,
+                battle_point_price: 15000,
+                role1: "Tank",
+                role2: null,
+            },
+            {
+                name: "Wanwan",
+                diamond_price: 320,
+                battle_point_price: 15000,
+                role1: "Marksman",
+                role2: null,
+            },
+            {
+                name: "Silvanna",
+                diamond_price: 320,
+                battle_point_price: 15000,
+                role1: "Fighter",
+                role2: "Tank",
+            },
+            {
+                name: "Atlas",
+                diamond_price: 320,
+                battle_point_price: 15000,
+                role1: "Tank",
+                role2: "Support",
+            },
+            {
+                name: "Popol and Kupa",
+                diamond_price: 320,
+                battle_point_price: 15000,
+                role1: "Marksman",
+                role2: null,
+            },
+            {
+                name: "Yu Zhong",
+                diamond_price: 320,
+                battle_point_price: 15000,
+                role1: "Fighter",
+                role2: "Tank",
+            },
+            {
+                name: "Luo Yi",
+                diamond_price: 320,
+                battle_point_price: 15000,
+                role1: "Mage",
+                role2: "Support",
+            },
+            {
+                name: "Benedetta",
+                diamond_price: 320,
+                battle_point_price: 15000,
+                role1: "Assassin",
+                role2: "Fighter",
+            },
+            {
+                name: "Barats",
+                diamond_price: 320,
+                battle_point_price: 15000,
+                role1: "Tank",
+                role2: "Fighter",
+            },
+            {
+                name: "Brody",
+                diamond_price: 320,
+                battle_point_price: 15000,
+                role1: "Marksman",
+                role2: null,
+            },
+            {
+                name: "Yve",
+                diamond_price: 320,
+                battle_point_price: 15000,
+                role1: "Mage",
+                role2: null,
+            },
+            {
+                name: "Mathilda",
+                diamond_price: 320,
+                battle_point_price: 15000,
+                role1: "Support",
+                role2: "Assassin",
+            },
+            {
+                name: "Paquito",
+                diamond_price: 320,
+                battle_point_price: 15000,
+                role1: "Fighter",
+                role2: null,
+            },
+            {
+                name: "Beatrix",
+                diamond_price: 320,
+                battle_point_price: 15000,
+                role1: "Marksman",
+                role2: null,
+            },
+            {
+                name: "Phoveus",
+                diamond_price: 320,
+                battle_point_price: 15000,
+                role1: "Fighter",
+                role2: null,
+            },
+            {
+                name: "Natan",
+                diamond_price: 320,
+                battle_point_price: 15000,
+                role1: "Marksman",
+                role2: null,
+            },
+            {
+                name: "Aamon",
+                diamond_price: 320,
+                battle_point_price: 15000,
+                role1: "Assassin",
+                role2: null,
+            },
+            {
+                name: "Valentina",
+                diamond_price: 320,
+                battle_point_price: 15000,
+                role1: "Mage",
+                role2: null,
+            },
+            {
+                name: "Edith",
+                diamond_price: 320,
+                battle_point_price: 15000,
+                role1: "Tank",
+                role2: "Marksman",
+            },
+            {
+                name: "Floryn",
+                diamond_price: 320,
+                battle_point_price: 15000,
+                role1: "Support",
+                role2: null,
+            },
+            {
+                name: "Aulus",
+                diamond_price: 320,
+                battle_point_price: 15000,
+                role1: "Fighter",
+                role2: null,
+            },
+            {
+                name: "Melissa",
+                diamond_price: 320,
+                battle_point_price: 15000,
+                role1: "Marksman",
+                role2: null,
+            },
+            {
+                name: "Xavier",
+                diamond_price: 320,
+                battle_point_price: 15000,
+                role1: "Mage",
+                role2: null,
+            },
+            {
+                name: "Julian",
+                diamond_price: 320,
+                battle_point_price: 15000,
+                role1: "Fighter",
+                role2: "Mage",
+            },
+        ]);
 
-    // Insert skin
-    const skinResult = await db.collection('skins').insertMany([
-      {
-        name: 'Dark Knight Alucard',
-        diamond_price: 749,
-        skin_type: 'Epic',
-        id_hero: heroResult.insertedIds[0],
-        isBuyable: true
-      },
-      {
-        name: 'Dragon Tamer Layla',
-        diamond_price: 749,
-        skin_type: 'Epic',
-        id_hero: heroResult.insertedIds[1],
-        isBuyable: true
-      },
-      {
-        name: 'Sacred Hammer Tigreal',
-        diamond_price: 749,
-        skin_type: 'Epic',
-        id_hero: heroResult.insertedIds[2],
-        isBuyable: true
-      },
-      {
-        name: 'V.E.N.O.M. Eudora',
-        diamond_price: 749,
-        skin_type: 'Epic',
-        id_hero: heroResult.insertedIds[3],
-        isBuyable: true
-      },
-      {
-        name: 'Apocalypse Knight Franco',
-        diamond_price: 749,
-        skin_type: 'Epic',
-        id_hero: heroResult.insertedIds[4],
-        isBuyable: true
-      },
-      {
-        name: 'Modena Butterfly Miya',
-        diamond_price: 749,
-        skin_type: 'Epic',
-        id_hero: heroResult.insertedIds[5],
-        isBuyable: true
-      },
-      {
-        name: 'Dragon Hunter Zilong',
-        diamond_price: 749,
-        skin_type: 'Epic',
-        id_hero: heroResult.insertedIds[6],
-        isBuyable: true
-      },
-      {
-        name: 'Aqua Pura Nana',
-        diamond_price: 749,
-        skin_type: 'Epic',
-        id_hero: heroResult.insertedIds[7],
-        isBuyable: true
-      },
-      {
-        name: 'Dragon Hunter Balmond',
-        diamond_price: 749,
-        skin_type: 'Epic',
-        id_hero: heroResult.insertedIds[8],
-        isBuyable: true
-      },
-      {
-        name: 'Steam Glider Alice',
-        diamond_price: 749,
-        skin_type: 'Epic',
-        id_hero: heroResult.insertedIds[9],
-        isBuyable: true
-      },
-      {
-        name: 'Dragon Hunter Grock',
-        diamond_price: 749,
-        skin_type: 'Epic',
-        id_hero: heroResult.insertedIds[10],
-        isBuyable: true
-      },
-      {
-        name: 'V.E.N.O.M. Harley',
-        diamond_price: 749,
-        skin_type: 'Epic',
-        id_hero: heroResult.insertedIds[11],
-        isBuyable: true
-      },
-      {
-        name: 'Dragon Hunter Bruno',
-        diamond_price: 749,
-        skin_type: 'Epic',
-        id_hero: heroResult.insertedIds[12],
-        isBuyable: true
-      },
-      {
-        name: 'Dragon Hunter Claude',
-        diamond_price: 749,
-        skin_type: 'Epic',
-        id_hero: heroResult.insertedIds[13],
-        isBuyable: true
-      },
-      {
-        name: 'Dragon Hunter Lancelot',
-        diamond_price: 749,
-        skin_type: 'Epic',
-        id_hero: heroResult.insertedIds[14],
-        isBuyable: true
-      },
-      {
-        name: 'Dragon Hunter Lesley',
-        diamond_price: 749,
-        skin_type: 'Epic',
-        id_hero: heroResult.insertedIds[15],
-        isBuyable: true
-      },
-      {
-        name: 'Dragon Hunter Lunox',
-        diamond_price: 749,
-        skin_type: 'Epic',
-        id_hero: heroResult.insertedIds[16],
-        isBuyable: true
-      },
-      {
-        name: 'Dragon Hunter Gusion',
-        diamond_price: 749,
-        skin_type: 'Epic',
-        id_hero: heroResult.insertedIds[17],
-        isBuyable: true
-      },
-      {
-        name: 'Dragon Hunter Khufra',
-        diamond_price: 749,
-        skin_type: 'Epic',
-        id_hero: heroResult.insertedIds[18],
-        isBuyable: true
-      },
-      {
-        name: 'Dragon Hunter Kadita',
-        diamond_price: 749,
-        skin_type: 'Epic',
-        id_hero: heroResult.insertedIds[19],
-        isBuyable: true
-      },
-      {
-        name: 'Legend Alucard',
-        diamond_price: 1499,
-        skin_type: 'Legend',
-        id_hero: heroResult.insertedIds[0],
-        isBuyable: true
-      },
-      {
-        name: 'Legend Layla',
-        diamond_price: 1499,
-        skin_type: 'Legend',
-        id_hero: heroResult.insertedIds[1],
-        isBuyable: true
-      },
-      {
-        name: 'Legend Tigreal',
-        diamond_price: 1499,
-        skin_type: 'Legend',
-        id_hero: heroResult.insertedIds[2],
-        isBuyable: true
-      },
-      {
-        name: 'Legend Eudora',
-        diamond_price: 1499,
-        skin_type: 'Legend',
-        id_hero: heroResult.insertedIds[3],
-        isBuyable: true
-      },
-      {
-        name: 'Legend Franco',
-        diamond_price: 1499,
-        skin_type: 'Legend',
-        id_hero: heroResult.insertedIds[4],
-        isBuyable: true
-      },
-      {
-        name: 'Legend Miya',
-        diamond_price: 1499,
-        skin_type: 'Legend',
-        id_hero: heroResult.insertedIds[5],
-        isBuyable: true
-      },
-      {
-        name: 'Legend Zilong',
-        diamond_price: 1499,
-        skin_type: 'Legend',
-        id_hero: heroResult.insertedIds[6],
-        isBuyable: true
-      },
-      {
-        name: 'Legend Nana',
-        diamond_price: 1499,
-        skin_type: 'Legend',
-        id_hero: heroResult.insertedIds[7],
-        isBuyable: true
-      },
-      {
-        name: 'Epic Selena',
-        diamond_price: 749,
-        skin_type: 'Epic',
-        id_hero: heroResult.insertedIds[20],
-        isBuyable: true
-      },
-      {
-        name: 'Epic Ling',
-        diamond_price: 749,
-        skin_type: 'Epic',
-        id_hero: heroResult.insertedIds[21],
-        isBuyable: true
-      },
-      {
-        name: 'Epic Dyrroth',
-        diamond_price: 749,
-        skin_type: 'Epic',
-        id_hero: heroResult.insertedIds[22],
-        isBuyable: true
-      },
-      {
-        name: 'Epic Lylia',
-        diamond_price: 749,
-        skin_type: 'Epic',
-        id_hero: heroResult.insertedIds[23],
-        isBuyable: true
-      },
-      {
-        name: 'Epic Masha',
-        diamond_price: 749,
-        skin_type: 'Epic',
-        id_hero: heroResult.insertedIds[24],
-        isBuyable: true
-      },
-      {
-        name: 'Epic Baxia',
-        diamond_price: 749,
-        skin_type: 'Epic',
-        id_hero: heroResult.insertedIds[25],
-        isBuyable: true
-      },
-      {
-        name: 'Epic Wanwan',
-        diamond_price: 749,
-        skin_type: 'Epic',
-        id_hero: heroResult.insertedIds[26],
-        isBuyable: true
-      },
-      {
-        name: 'Epic Silvanna',
-        diamond_price: 749,
-        skin_type: 'Epic',
-        id_hero: heroResult.insertedIds[27],
-        isBuyable: true
-      },
-      {
-        name: 'Epic Atlas',
-        diamond_price: 749,
-        skin_type: 'Epic',
-        id_hero: heroResult.insertedIds[28],
-        isBuyable: true
-      },
-      {
-        name: 'Epic Popol and Kupa',
-        diamond_price: 749,
-        skin_type: 'Epic',
-        id_hero: heroResult.insertedIds[29],
-        isBuyable: true
-      },
-      {
-        name: 'Epic Yu Zhong',
-        diamond_price: 749,
-        skin_type: 'Epic',
-        id_hero: heroResult.insertedIds[30],
-        isBuyable: true
-      },
-      {
-        name: 'Epic Luo Yi',
-        diamond_price: 749,
-        skin_type: 'Epic',
-        id_hero: heroResult.insertedIds[31],
-        isBuyable: true
-      },
-      {
-        name: 'Epic Benedetta',
-        diamond_price: 749,
-        skin_type: 'Epic',
-        id_hero: heroResult.insertedIds[32],
-        isBuyable: true
-      },
-      {
-        name: 'Epic Barats',
-        diamond_price: 749,
-        skin_type: 'Epic',
-        id_hero: heroResult.insertedIds[33],
-        isBuyable: true
-      },
-      {
-        name: 'Epic Brody',
-        diamond_price: 749,
-        skin_type: 'Epic',
-        id_hero: heroResult.insertedIds[34],
-        isBuyable: true
-      },
-      {
-        name: 'Epic Yve',
-        diamond_price: 749,
-        skin_type: 'Epic',
-        id_hero: heroResult.insertedIds[35],
-        isBuyable: true
-      },
-      {
-        name: 'Epic Mathilda',
-        diamond_price: 749,
-        skin_type: 'Epic',
-        id_hero: heroResult.insertedIds[36],
-        isBuyable: true
-      },
-      {
-        name: 'Epic Paquito',
-        diamond_price: 749,
-        skin_type: 'Epic',
-        id_hero: heroResult.insertedIds[37],
-        isBuyable: true
-      },
-      {
-        name: 'Epic Beatrix',
-        diamond_price: 749,
-        skin_type: 'Epic',
-        id_hero: heroResult.insertedIds[38],
-        isBuyable: true
-      },
-      {
-        name: 'Epic Phoveus',
-        diamond_price: 749,
-        skin_type: 'Epic',
-        id_hero: heroResult.insertedIds[39],
-        isBuyable: true
-      },
-      {
-        name: 'Epic Natan',
-        diamond_price: 749,
-        skin_type: 'Epic',
-        id_hero: heroResult.insertedIds[40],
-        isBuyable: true
-      },
-      {
-        name: 'Epic Aamon',
-        diamond_price: 749,
-        skin_type: 'Epic',
-        id_hero: heroResult.insertedIds[41],
-        isBuyable: true
-      },
-      {
-        name: 'Epic Valentina',
-        diamond_price: 749,
-        skin_type: 'Epic',
-        id_hero: heroResult.insertedIds[42],
-        isBuyable: true
-      },
-      {
-        name: 'Epic Edith',
-        diamond_price: 749,
-        skin_type: 'Epic',
-        id_hero: heroResult.insertedIds[43],
-        isBuyable: true
-      },
-      {
-        name: 'Epic Floryn',
-        diamond_price: 749,
-        skin_type: 'Epic',
-        id_hero: heroResult.insertedIds[44],
-        isBuyable: true
-      },
-      {
-        name: 'Epic Aulus',
-        diamond_price: 749,
-        skin_type: 'Epic',
-        id_hero: heroResult.insertedIds[45],
-        isBuyable: true
-      },
-      {
-        name: 'Epic Melissa',
-        diamond_price: 749,
-        skin_type: 'Epic',
-        id_hero: heroResult.insertedIds[46],
-        isBuyable: true
-      },
-      {
-        name: 'Epic Xavier',
-        diamond_price: 749,
-        skin_type: 'Epic',
-        id_hero: heroResult.insertedIds[47],
-        isBuyable: true
-      },
-      {
-        name: 'Epic Julian',
-        diamond_price: 749,
-        skin_type: 'Epic',
-        id_hero: heroResult.insertedIds[48],
-        isBuyable: true
-      },
-      {
-        name: 'Legend Selena',
-        diamond_price: 1499,
-        skin_type: 'Legend',
-        id_hero: heroResult.insertedIds[20],
-        isBuyable: true
-      },
-      {
-        name: 'Legend Ling',
-        diamond_price: 1499,
-        skin_type: 'Legend',
-        id_hero: heroResult.insertedIds[21],
-        isBuyable: true
-      },
-      {
-        name: 'Legend Dyrroth',
-        diamond_price: 1499,
-        skin_type: 'Legend',
-        id_hero: heroResult.insertedIds[22],
-        isBuyable: true
-      },
-      {
-        name: 'Legend Lylia',
-        diamond_price: 1499,
-        skin_type: 'Legend',
-        id_hero: heroResult.insertedIds[23],
-        isBuyable: true
-      },
-      {
-        name: 'Legend Masha',
-        diamond_price: 1499,
-        skin_type: 'Legend',
-        id_hero: heroResult.insertedIds[24],
-        isBuyable: true
-      },
-      {
-        name: 'Legend Baxia',
-        diamond_price: 1499,
-        skin_type: 'Legend',
-        id_hero: heroResult.insertedIds[25],
-        isBuyable: true
-      },
-      {
-        name: 'Legend Wanwan',
-        diamond_price: 1499,
-        skin_type: 'Legend',
-        id_hero: heroResult.insertedIds[26],
-        isBuyable: true
-      },
-      {
-        name: 'Legend Silvanna',
-        diamond_price: 1499,
-        skin_type: 'Legend',
-        id_hero: heroResult.insertedIds[27],
-        isBuyable: true
-      }
-    ]);
+        // Insert skin
+        const skinResult = await db.collection("skins").insertMany([
+            {
+                name: "Dark Knight Alucard",
+                diamond_price: 749,
+                skin_type: "Epic",
+                id_hero: heroResult.insertedIds[0],
+                isBuyable: true,
+            },
+            {
+                name: "Dragon Tamer Layla",
+                diamond_price: 749,
+                skin_type: "Epic",
+                id_hero: heroResult.insertedIds[1],
+                isBuyable: true,
+            },
+            {
+                name: "Sacred Hammer Tigreal",
+                diamond_price: 749,
+                skin_type: "Epic",
+                id_hero: heroResult.insertedIds[2],
+                isBuyable: true,
+            },
+            {
+                name: "V.E.N.O.M. Eudora",
+                diamond_price: 749,
+                skin_type: "Epic",
+                id_hero: heroResult.insertedIds[3],
+                isBuyable: true,
+            },
+            {
+                name: "Apocalypse Knight Franco",
+                diamond_price: 749,
+                skin_type: "Epic",
+                id_hero: heroResult.insertedIds[4],
+                isBuyable: true,
+            },
+            {
+                name: "Modena Butterfly Miya",
+                diamond_price: 749,
+                skin_type: "Epic",
+                id_hero: heroResult.insertedIds[5],
+                isBuyable: true,
+            },
+            {
+                name: "Dragon Hunter Zilong",
+                diamond_price: 749,
+                skin_type: "Epic",
+                id_hero: heroResult.insertedIds[6],
+                isBuyable: true,
+            },
+            {
+                name: "Aqua Pura Nana",
+                diamond_price: 749,
+                skin_type: "Epic",
+                id_hero: heroResult.insertedIds[7],
+                isBuyable: true,
+            },
+            {
+                name: "Dragon Hunter Balmond",
+                diamond_price: 749,
+                skin_type: "Epic",
+                id_hero: heroResult.insertedIds[8],
+                isBuyable: true,
+            },
+            {
+                name: "Steam Glider Alice",
+                diamond_price: 749,
+                skin_type: "Epic",
+                id_hero: heroResult.insertedIds[9],
+                isBuyable: true,
+            },
+            {
+                name: "Dragon Hunter Grock",
+                diamond_price: 749,
+                skin_type: "Epic",
+                id_hero: heroResult.insertedIds[10],
+                isBuyable: true,
+            },
+            {
+                name: "V.E.N.O.M. Harley",
+                diamond_price: 749,
+                skin_type: "Epic",
+                id_hero: heroResult.insertedIds[11],
+                isBuyable: true,
+            },
+            {
+                name: "Dragon Hunter Bruno",
+                diamond_price: 749,
+                skin_type: "Epic",
+                id_hero: heroResult.insertedIds[12],
+                isBuyable: true,
+            },
+            {
+                name: "Dragon Hunter Claude",
+                diamond_price: 749,
+                skin_type: "Epic",
+                id_hero: heroResult.insertedIds[13],
+                isBuyable: true,
+            },
+            {
+                name: "Dragon Hunter Lancelot",
+                diamond_price: 749,
+                skin_type: "Epic",
+                id_hero: heroResult.insertedIds[14],
+                isBuyable: true,
+            },
+            {
+                name: "Dragon Hunter Lesley",
+                diamond_price: 749,
+                skin_type: "Epic",
+                id_hero: heroResult.insertedIds[15],
+                isBuyable: true,
+            },
+            {
+                name: "Dragon Hunter Lunox",
+                diamond_price: 749,
+                skin_type: "Epic",
+                id_hero: heroResult.insertedIds[16],
+                isBuyable: true,
+            },
+            {
+                name: "Dragon Hunter Gusion",
+                diamond_price: 749,
+                skin_type: "Epic",
+                id_hero: heroResult.insertedIds[17],
+                isBuyable: true,
+            },
+            {
+                name: "Dragon Hunter Khufra",
+                diamond_price: 749,
+                skin_type: "Epic",
+                id_hero: heroResult.insertedIds[18],
+                isBuyable: true,
+            },
+            {
+                name: "Dragon Hunter Kadita",
+                diamond_price: 749,
+                skin_type: "Epic",
+                id_hero: heroResult.insertedIds[19],
+                isBuyable: true,
+            },
+            {
+                name: "Legend Alucard",
+                diamond_price: 1499,
+                skin_type: "Legend",
+                id_hero: heroResult.insertedIds[0],
+                isBuyable: true,
+            },
+            {
+                name: "Legend Layla",
+                diamond_price: 1499,
+                skin_type: "Legend",
+                id_hero: heroResult.insertedIds[1],
+                isBuyable: true,
+            },
+            {
+                name: "Legend Tigreal",
+                diamond_price: 1499,
+                skin_type: "Legend",
+                id_hero: heroResult.insertedIds[2],
+                isBuyable: true,
+            },
+            {
+                name: "Legend Eudora",
+                diamond_price: 1499,
+                skin_type: "Legend",
+                id_hero: heroResult.insertedIds[3],
+                isBuyable: true,
+            },
+            {
+                name: "Legend Franco",
+                diamond_price: 1499,
+                skin_type: "Legend",
+                id_hero: heroResult.insertedIds[4],
+                isBuyable: true,
+            },
+            {
+                name: "Legend Miya",
+                diamond_price: 1499,
+                skin_type: "Legend",
+                id_hero: heroResult.insertedIds[5],
+                isBuyable: true,
+            },
+            {
+                name: "Legend Zilong",
+                diamond_price: 1499,
+                skin_type: "Legend",
+                id_hero: heroResult.insertedIds[6],
+                isBuyable: true,
+            },
+            {
+                name: "Legend Nana",
+                diamond_price: 1499,
+                skin_type: "Legend",
+                id_hero: heroResult.insertedIds[7],
+                isBuyable: true,
+            },
+            {
+                name: "Epic Selena",
+                diamond_price: 749,
+                skin_type: "Epic",
+                id_hero: heroResult.insertedIds[20],
+                isBuyable: true,
+            },
+            {
+                name: "Epic Ling",
+                diamond_price: 749,
+                skin_type: "Epic",
+                id_hero: heroResult.insertedIds[21],
+                isBuyable: true,
+            },
+            {
+                name: "Epic Dyrroth",
+                diamond_price: 749,
+                skin_type: "Epic",
+                id_hero: heroResult.insertedIds[22],
+                isBuyable: true,
+            },
+            {
+                name: "Epic Lylia",
+                diamond_price: 749,
+                skin_type: "Epic",
+                id_hero: heroResult.insertedIds[23],
+                isBuyable: true,
+            },
+            {
+                name: "Epic Masha",
+                diamond_price: 749,
+                skin_type: "Epic",
+                id_hero: heroResult.insertedIds[24],
+                isBuyable: true,
+            },
+            {
+                name: "Epic Baxia",
+                diamond_price: 749,
+                skin_type: "Epic",
+                id_hero: heroResult.insertedIds[25],
+                isBuyable: true,
+            },
+            {
+                name: "Epic Wanwan",
+                diamond_price: 749,
+                skin_type: "Epic",
+                id_hero: heroResult.insertedIds[26],
+                isBuyable: true,
+            },
+            {
+                name: "Epic Silvanna",
+                diamond_price: 749,
+                skin_type: "Epic",
+                id_hero: heroResult.insertedIds[27],
+                isBuyable: true,
+            },
+            {
+                name: "Epic Atlas",
+                diamond_price: 749,
+                skin_type: "Epic",
+                id_hero: heroResult.insertedIds[28],
+                isBuyable: true,
+            },
+            {
+                name: "Epic Popol and Kupa",
+                diamond_price: 749,
+                skin_type: "Epic",
+                id_hero: heroResult.insertedIds[29],
+                isBuyable: true,
+            },
+            {
+                name: "Epic Yu Zhong",
+                diamond_price: 749,
+                skin_type: "Epic",
+                id_hero: heroResult.insertedIds[30],
+                isBuyable: true,
+            },
+            {
+                name: "Epic Luo Yi",
+                diamond_price: 749,
+                skin_type: "Epic",
+                id_hero: heroResult.insertedIds[31],
+                isBuyable: true,
+            },
+            {
+                name: "Epic Benedetta",
+                diamond_price: 749,
+                skin_type: "Epic",
+                id_hero: heroResult.insertedIds[32],
+                isBuyable: true,
+            },
+            {
+                name: "Epic Barats",
+                diamond_price: 749,
+                skin_type: "Epic",
+                id_hero: heroResult.insertedIds[33],
+                isBuyable: true,
+            },
+            {
+                name: "Epic Brody",
+                diamond_price: 749,
+                skin_type: "Epic",
+                id_hero: heroResult.insertedIds[34],
+                isBuyable: true,
+            },
+            {
+                name: "Epic Yve",
+                diamond_price: 749,
+                skin_type: "Epic",
+                id_hero: heroResult.insertedIds[35],
+                isBuyable: true,
+            },
+            {
+                name: "Epic Mathilda",
+                diamond_price: 749,
+                skin_type: "Epic",
+                id_hero: heroResult.insertedIds[36],
+                isBuyable: true,
+            },
+            {
+                name: "Epic Paquito",
+                diamond_price: 749,
+                skin_type: "Epic",
+                id_hero: heroResult.insertedIds[37],
+                isBuyable: true,
+            },
+            {
+                name: "Epic Beatrix",
+                diamond_price: 749,
+                skin_type: "Epic",
+                id_hero: heroResult.insertedIds[38],
+                isBuyable: true,
+            },
+            {
+                name: "Epic Phoveus",
+                diamond_price: 749,
+                skin_type: "Epic",
+                id_hero: heroResult.insertedIds[39],
+                isBuyable: true,
+            },
+            {
+                name: "Epic Natan",
+                diamond_price: 749,
+                skin_type: "Epic",
+                id_hero: heroResult.insertedIds[40],
+                isBuyable: true,
+            },
+            {
+                name: "Epic Aamon",
+                diamond_price: 749,
+                skin_type: "Epic",
+                id_hero: heroResult.insertedIds[41],
+                isBuyable: true,
+            },
+            {
+                name: "Epic Valentina",
+                diamond_price: 749,
+                skin_type: "Epic",
+                id_hero: heroResult.insertedIds[42],
+                isBuyable: true,
+            },
+            {
+                name: "Epic Edith",
+                diamond_price: 749,
+                skin_type: "Epic",
+                id_hero: heroResult.insertedIds[43],
+                isBuyable: true,
+            },
+            {
+                name: "Epic Floryn",
+                diamond_price: 749,
+                skin_type: "Epic",
+                id_hero: heroResult.insertedIds[44],
+                isBuyable: true,
+            },
+            {
+                name: "Epic Aulus",
+                diamond_price: 749,
+                skin_type: "Epic",
+                id_hero: heroResult.insertedIds[45],
+                isBuyable: true,
+            },
+            {
+                name: "Epic Melissa",
+                diamond_price: 749,
+                skin_type: "Epic",
+                id_hero: heroResult.insertedIds[46],
+                isBuyable: true,
+            },
+            {
+                name: "Epic Xavier",
+                diamond_price: 749,
+                skin_type: "Epic",
+                id_hero: heroResult.insertedIds[47],
+                isBuyable: true,
+            },
+            {
+                name: "Epic Julian",
+                diamond_price: 749,
+                skin_type: "Epic",
+                id_hero: heroResult.insertedIds[48],
+                isBuyable: true,
+            },
+            {
+                name: "Legend Selena",
+                diamond_price: 1499,
+                skin_type: "Legend",
+                id_hero: heroResult.insertedIds[20],
+                isBuyable: true,
+            },
+            {
+                name: "Legend Ling",
+                diamond_price: 1499,
+                skin_type: "Legend",
+                id_hero: heroResult.insertedIds[21],
+                isBuyable: true,
+            },
+            {
+                name: "Legend Dyrroth",
+                diamond_price: 1499,
+                skin_type: "Legend",
+                id_hero: heroResult.insertedIds[22],
+                isBuyable: true,
+            },
+            {
+                name: "Legend Lylia",
+                diamond_price: 1499,
+                skin_type: "Legend",
+                id_hero: heroResult.insertedIds[23],
+                isBuyable: true,
+            },
+            {
+                name: "Legend Masha",
+                diamond_price: 1499,
+                skin_type: "Legend",
+                id_hero: heroResult.insertedIds[24],
+                isBuyable: true,
+            },
+            {
+                name: "Legend Baxia",
+                diamond_price: 1499,
+                skin_type: "Legend",
+                id_hero: heroResult.insertedIds[25],
+                isBuyable: true,
+            },
+            {
+                name: "Legend Wanwan",
+                diamond_price: 1499,
+                skin_type: "Legend",
+                id_hero: heroResult.insertedIds[26],
+                isBuyable: true,
+            },
+            {
+                name: "Legend Silvanna",
+                diamond_price: 1499,
+                skin_type: "Legend",
+                id_hero: heroResult.insertedIds[27],
+                isBuyable: true,
+            },
+        ]);
 
-    // Insert user
-    await db.collection('users').insertOne({
-      username: 'player1',
-      password: 'hashed_password', // sebaiknya hash kalau production
-      email: 'player1@example.com',
-      gender: 'Male',
-      region: 'Indonesia',
-      role: 'Player',
-      diamond: 100,
-      starlight: true,
-      battle_point: 2000,
-      owned_heroes: [
-        heroResult.insertedIds[0], // Alucard
-        heroResult.insertedIds[1]  // Layla
-      ],
-      owned_skins: [
-        skinResult.insertedIds[0] // Skin Alucard
-      ],
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      
-    });
+        // Insert user
+        await db.collection("users").insertOne({
+            username: "player1",
+            password: "hashed_password", // sebaiknya hash kalau production
+            email: "player1@example.com",
+            gender: "Male",
+            region: "Indonesia",
+            role: "Player",
+            diamond: 100,
+            starlight: true,
+            battle_point: 2000,
+            owned_heroes: [
+                heroResult.insertedIds[0], // Alucard
+                heroResult.insertedIds[1], // Layla
+            ],
+            owned_skins: [
+                skinResult.insertedIds[0], // Skin Alucard
+            ],
+            createdAt: new Date(),
+            updatedAt: new Date(),
+        });
 
-    // Insert 10 dummy users
-    const dummyUsers = [
-      {
-        username: 'player2',
-        password: 'hashed_password',
-        email: 'player2@example.com',
-        gender: 'Female',
-        region: 'Indonesia',
-        role: 'Player',
-        diamond: 500,
-        starlight: false,
-        battle_point: 5000,
-        owned_heroes: [heroResult.insertedIds[2], heroResult.insertedIds[3]], // Tigreal, Eudora
-        owned_skins: [],
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      {
-        username: 'player3',
-        password: 'hashed_password',
-        email: 'player3@example.com',
-        gender: 'Male',
-        region: 'Malaysia',
-        role: 'Player',
-        diamond: 300,
-        starlight: true,
-        battle_point: 3000,
-        owned_heroes: [heroResult.insertedIds[4], heroResult.insertedIds[5]], // Franco, Miya
-        owned_skins: [],
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      {
-        username: 'player4',
-        password: 'hashed_password',
-        email: 'player4@example.com',
-        gender: 'Female',
-        region: 'Singapore',
-        role: 'Player',
-        diamond: 1000,
-        starlight: true,
-        battle_point: 8000,
-        owned_heroes: [heroResult.insertedIds[6], heroResult.insertedIds[7]], // Zilong, Nana
-        owned_skins: [],
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      {
-        username: 'player5',
-        password: 'hashed_password',
-        email: 'player5@example.com',
-        gender: 'Male',
-        region: 'Thailand',
-        role: 'Player',
-        diamond: 200,
-        starlight: false,
-        battle_point: 1500,
-        owned_heroes: [heroResult.insertedIds[8], heroResult.insertedIds[9]], // Balmond, Alice
-        owned_skins: [],
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      {
-        username: 'player6',
-        password: 'hashed_password',
-        email: 'player6@example.com',
-        gender: 'Female',
-        region: 'Vietnam',
-        role: 'Player',
-        diamond: 800,
-        starlight: true,
-        battle_point: 6000,
-        owned_heroes: [heroResult.insertedIds[10], heroResult.insertedIds[11]], // Grock, Harley
-        owned_skins: [],
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      {
-        username: 'player7',
-        password: 'hashed_password',
-        email: 'player7@example.com',
-        gender: 'Male',
-        region: 'Philippines',
-        role: 'Player',
-        diamond: 400,
-        starlight: false,
-        battle_point: 2500,
-        owned_heroes: [heroResult.insertedIds[12], heroResult.insertedIds[13]], // Bruno, Claude
-        owned_skins: [],
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      {
-        username: 'player8',
-        password: 'hashed_password',
-        email: 'player8@example.com',
-        gender: 'Female',
-        region: 'Brunei',
-        role: 'Player',
-        diamond: 600,
-        starlight: true,
-        battle_point: 4500,
-        owned_heroes: [heroResult.insertedIds[14], heroResult.insertedIds[15]], // Lancelot, Lesley
-        owned_skins: [],
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      {
-        username: 'player9',
-        password: 'hashed_password',
-        email: 'player9@example.com',
-        gender: 'Male',
-        region: 'Cambodia',
-        role: 'Player',
-        diamond: 700,
-        starlight: false,
-        battle_point: 5500,
-        owned_heroes: [heroResult.insertedIds[16], heroResult.insertedIds[17]], // Lunox, Gusion
-        owned_skins: [],
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      {
-        username: 'player10',
-        password: 'hashed_password',
-        email: 'player10@example.com',
-        gender: 'Female',
-        region: 'Laos',
-        role: 'Player',
-        diamond: 900,
-        starlight: true,
-        battle_point: 7000,
-        owned_heroes: [heroResult.insertedIds[18], heroResult.insertedIds[19]], // Khufra, Kadita
-        owned_skins: [],
-        createdAt: new Date(),
-        updatedAt: new Date()
-      }
-    ];
+        // Insert 10 dummy users
+        const dummyUsers = [
+            {
+                username: "player2",
+                password: "hashed_password",
+                email: "player2@example.com",
+                gender: "Female",
+                region: "Indonesia",
+                role: "Player",
+                diamond: 500,
+                starlight: false,
+                battle_point: 5000,
+                owned_heroes: [
+                    heroResult.insertedIds[2],
+                    heroResult.insertedIds[3],
+                ], // Tigreal, Eudora
+                owned_skins: [],
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            },
+            {
+                username: "player3",
+                password: "hashed_password",
+                email: "player3@example.com",
+                gender: "Male",
+                region: "Malaysia",
+                role: "Player",
+                diamond: 300,
+                starlight: true,
+                battle_point: 3000,
+                owned_heroes: [
+                    heroResult.insertedIds[4],
+                    heroResult.insertedIds[5],
+                ], // Franco, Miya
+                owned_skins: [],
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            },
+            {
+                username: "player4",
+                password: "hashed_password",
+                email: "player4@example.com",
+                gender: "Female",
+                region: "Singapore",
+                role: "Player",
+                diamond: 1000,
+                starlight: true,
+                battle_point: 8000,
+                owned_heroes: [
+                    heroResult.insertedIds[6],
+                    heroResult.insertedIds[7],
+                ], // Zilong, Nana
+                owned_skins: [],
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            },
+            {
+                username: "player5",
+                password: "hashed_password",
+                email: "player5@example.com",
+                gender: "Male",
+                region: "Thailand",
+                role: "Player",
+                diamond: 200,
+                starlight: false,
+                battle_point: 1500,
+                owned_heroes: [
+                    heroResult.insertedIds[8],
+                    heroResult.insertedIds[9],
+                ], // Balmond, Alice
+                owned_skins: [],
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            },
+            {
+                username: "player6",
+                password: "hashed_password",
+                email: "player6@example.com",
+                gender: "Female",
+                region: "Vietnam",
+                role: "Player",
+                diamond: 800,
+                starlight: true,
+                battle_point: 6000,
+                owned_heroes: [
+                    heroResult.insertedIds[10],
+                    heroResult.insertedIds[11],
+                ], // Grock, Harley
+                owned_skins: [],
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            },
+            {
+                username: "player7",
+                password: "hashed_password",
+                email: "player7@example.com",
+                gender: "Male",
+                region: "Philippines",
+                role: "Player",
+                diamond: 400,
+                starlight: false,
+                battle_point: 2500,
+                owned_heroes: [
+                    heroResult.insertedIds[12],
+                    heroResult.insertedIds[13],
+                ], // Bruno, Claude
+                owned_skins: [],
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            },
+            {
+                username: "player8",
+                password: "hashed_password",
+                email: "player8@example.com",
+                gender: "Female",
+                region: "Brunei",
+                role: "Player",
+                diamond: 600,
+                starlight: true,
+                battle_point: 4500,
+                owned_heroes: [
+                    heroResult.insertedIds[14],
+                    heroResult.insertedIds[15],
+                ], // Lancelot, Lesley
+                owned_skins: [],
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            },
+            {
+                username: "player9",
+                password: "hashed_password",
+                email: "player9@example.com",
+                gender: "Male",
+                region: "Cambodia",
+                role: "Player",
+                diamond: 700,
+                starlight: false,
+                battle_point: 5500,
+                owned_heroes: [
+                    heroResult.insertedIds[16],
+                    heroResult.insertedIds[17],
+                ], // Lunox, Gusion
+                owned_skins: [],
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            },
+            {
+                username: "player10",
+                password: "hashed_password",
+                email: "player10@example.com",
+                gender: "Female",
+                region: "Laos",
+                role: "Player",
+                diamond: 900,
+                starlight: true,
+                battle_point: 7000,
+                owned_heroes: [
+                    heroResult.insertedIds[18],
+                    heroResult.insertedIds[19],
+                ], // Khufra, Kadita
+                owned_skins: [],
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            },
+        ];
 
-    await db.collection('users').insertMany(dummyUsers);
-  },
+        await db.collection("users").insertMany(dummyUsers);
 
         await db.collection("payment_history").insertOne({
             user_id: userResult.insertedId,
