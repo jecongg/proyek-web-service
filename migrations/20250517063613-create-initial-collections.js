@@ -4,7 +4,7 @@ module.exports = {
         await db.createCollection("users");
         await db.createCollection("heroes");
         await db.createCollection("skins");
-        await db.createCollection("payment_history"); // Tambahan
+        await db.createCollection("payment_histories"); // Tambahan
 
         // Insert data hero
         const heroResult = await db.collection("heroes").insertMany([
@@ -1007,6 +1007,6 @@ module.exports = {
         await db.collection("users").drop();
         await db.collection("heroes").drop();
         await db.collection("skins").drop();
-        await db.collection("payment_history").drop();
+        await db.collection("payment_histories").drop();
     },
 };

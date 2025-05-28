@@ -18,7 +18,6 @@ const paymentHistorySchema = new mongoose.Schema({
     payment_method: {
         type: String,
         enum: ["gopay", "credit_card", "shopeepay", "bank_transfer", "other"],
-        required: true,
     },
     status: {
         type: String,
@@ -40,4 +39,4 @@ const paymentHistorySchema = new mongoose.Schema({
     },
 });
 
-module.exports = mongoose.model("PaymentHistory", paymentHistorySchema);
+module.exports = mongoose.model("PaymentHistory", paymentHistorySchema, "payment_histories");

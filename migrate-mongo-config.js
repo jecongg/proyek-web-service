@@ -3,11 +3,7 @@ require('dotenv').config();
 const config = {
   mongodb: {
     url: process.env.MONGODB_URI || "mongodb://localhost:27017/mobile_legend_db",
-    databaseName: "mobile_legend_db",
-    options: {
-      useNewUrlParser: true,
-      useUnifiedTopology: true
-    }
+    databaseName: "mobile_legend_db"
   },
   migrationsDir: "migrations",
   changelogCollectionName: "changelog",

@@ -8,9 +8,6 @@ services:
       - "3000:3000"
     volumes:
       - .:/app
-      - /app/node_modules   # Supaya node_modules di container tidak tertindih
-    environment:
-      - MONGODB_URI=mongodb://mongo:27017/proyek_ws
     depends_on:
       - mongo
 
@@ -18,7 +15,7 @@ services:
     image: mongo:6
     container_name: mongo
     ports:
-      - "27017:27017"
+      - "27018:27017"
     volumes:
       - mongo-data:/data/db
 

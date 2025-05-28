@@ -16,7 +16,7 @@ function isSignatureValid(body) {
 
 exports.buyStarlight = async (req, res) => {
     try {
-        const userId = req.user._id;
+        const userId = req.user.id;
 
         // Ambil data user dari database
         const user = await User.findById(userId);
@@ -24,6 +24,7 @@ exports.buyStarlight = async (req, res) => {
         const amount = 150000;
         const orderId = `starlight-${userId}-${Date.now()}`;
 
+        // console.log(req.user._id);
         // Hanya pakai email
         const customer = {
             email: user.email,
@@ -48,6 +49,7 @@ exports.buyStarlight = async (req, res) => {
         console.error("Starlight payment error:", err);
         res.status(500).json({
             message: "Failed to initiate starlight purchase",
+            err
         });
     }
 };

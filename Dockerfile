@@ -17,6 +17,3 @@ EXPOSE 3000
 # Jalankan app
 # CMD ["npm", "dev"]
 CMD ["npx", "nodemon"]
-
-
-
