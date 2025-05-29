@@ -39,3 +39,57 @@ exports.getAllSkins = async (req, res) => {
         res.status(500).json({ message: "Internal Server Error" });
     }
 };
+
+exports.updateHargaSkin = async (req, res) => {
+    // Mengambil id_skin dari parameter URL
+    const { id_skin } = req.params; 
+    // Mengambil diamond_price dari body request
+    const { diamond_price } = req.body;
+
+    try {
+        // Memastikan diamond_price ada di body
+        if (typeof diamond_price === "undefined") {
+            return res.status(400).json({
+                message: "Field diamond_price harus diisi",
+            });
+        }
+
+        // Parsing diamond_price ke number
+        const parsedDiamondPrice = parseFloat(diamond_price);
+
+        // Validasi diamond_price harus angka positif
+        if (isNaN(parsedDiamondPrice) || parsedDiamondPrice < 0) {
+            return res.status(400).json({
+                message: "diamond_price harus berupa angka positif",
+            });
+        }
+
+        // Membuat objek update hanya dengan diamond_price
+        const updateFields = {
+            diamond_price: parsedDiamondPrice,
+        };
+
+        // Mencari dan mengupdate skin berdasarkan id_skin
+        const updatedSkin = await Skin.findByIdAndUpdate(
+            id_skin, // ID skin yang akan diupdate
+            updateFields, // Data yang akan diupdate
+            { new: true, runValidators: true } // Opsi: kembalikan data baru & jalankan validator
+        );
+
+        // Jika skin tidak ditemukan
+        if (!updatedSkin) {
+            return res.status(404).json({ message: "Skin tidak ditemukan" });
+        }
+
+        // Jika berhasil, kirim respons sukses
+        res.json({
+            message: "Harga skin berhasil diupdate",
+            skin: updatedSkin,
+        });
+
+    } catch (error) {
+        // Tangani error internal server
+        console.error("Error updating harga skin:", error);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+};

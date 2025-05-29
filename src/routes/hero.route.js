@@ -5,5 +5,7 @@ const authJwt = require("../middleware/authJwt");
 
 router.put("/:id_hero", heroController.updateHargaHero);
 router.post("/", [authJwt.verifyToken], heroController.createHero);
+router.get("/", heroController.getAllHeroes);
+
 
 module.exports = router;

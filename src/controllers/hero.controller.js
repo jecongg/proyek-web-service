@@ -118,3 +118,60 @@ exports.createHero = async (req, res) => {
         res.status(500).json({ message: "Internal Server Error" });
     }
 };
+
+exports.getAllHeroes = async (req, res) => {
+    try {
+        // Mengambil token dari header
+        const token = req.headers["x-auth-token"];
+
+        // Mengambil semua hero dari database
+        let heroes = await Hero.find(); 
+
+        // Jika ada token (user login)
+        if (token) {
+            try {
+                // Verifikasi token untuk mendapatkan ID user
+                const decoded = jwt.verify(token, process.env.JWT_SECRET || "secret_key");
+                const userId = decoded.id;
+
+                // Cari user berdasarkan ID dan ambil hanya field 'owned_heroes'
+                const user = await User.findById(userId).select("owned_heroes");
+
+                // Jika user tidak ditemukan (mungkin token tidak valid/lama)
+                if (!user) {
+                    // Anda bisa memilih untuk mengembalikan error atau 
+                    // mengembalikan semua hero tanpa status 'owned'
+                    // Di sini kita kembalikan semua hero tanpa status 'owned'
+                    console.warn("User not found for token, returning heroes without ownership status.");
+                    return res.json(heroes);
+                }
+
+                // Ubah 'owned_heroes' menjadi Set untuk pengecekan yang efisien
+                const ownedHeroIds = new Set(user.owned_heroes.map(id => id.toString()));
+
+                // Tambahkan properti 'owned' ke setiap hero
+                heroes = heroes.map(hero => {
+                    const isOwned = ownedHeroIds.has(hero._id.toString());
+                    return {
+                        ...hero._doc, // Gunakan _doc untuk mendapatkan objek data murni Mongoose
+                        owned: isOwned,
+                    };
+                });
+
+            } catch (jwtError) {
+                // Jika token tidak valid (error saat verify), 
+                // kita anggap sebagai user non-login dan kembalikan hero tanpa status 'owned'.
+                console.warn("Invalid token, returning heroes without ownership status:", jwtError.message);
+                // Tetap kembalikan 'heroes' yang asli tanpa status 'owned'
+            }
+        }
+
+        // Kembalikan daftar hero (dengan atau tanpa status 'owned')
+        res.json(heroes);
+
+    } catch (error) {
+        // Tangani error internal server saat mengambil data hero
+        console.error("Error fetching heroes:", error);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+};
