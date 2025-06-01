@@ -93,6 +93,9 @@ exports.createHero = async (req, res) => {
         return res.status(400).json({ message: "battle_point_price harus berupa angka positif" });
     }
 
+    const normalizedRole1 = role1 && role1.trim() !== "" ? role1.trim() : null;
+    const normalizedRole2 = role2 && role2.trim() !== "" ? role2.trim() : null;
+
     try {
         const existingHero = await Hero.findOne({ name: name.trim() });
         if (existingHero) {
@@ -103,8 +106,8 @@ exports.createHero = async (req, res) => {
             name: name.trim(),
             diamond_price: parsedDiamondPrice,
             battle_point_price: parsedBattlePointPrice,
-            role1,
-            role2,
+            role1: normalizedRole1,
+            role2: normalizedRole2,
         });
 
         const savedHero = await newHero.save();
@@ -118,3 +121,5 @@ exports.createHero = async (req, res) => {
         res.status(500).json({ message: "Internal Server Error" });
     }
 };
+
+

@@ -1,5 +1,6 @@
 const Skin = require("../models/Skin");
 const User = require("../models/User");
+const Hero = require("../models/Hero");
 const jwt = require("jsonwebtoken");
 
 exports.getAllSkins = async (req, res) => {
@@ -36,6 +37,58 @@ exports.getAllSkins = async (req, res) => {
         res.json(skins);
     } catch (error) {
         console.error("Error fetching skins:", error);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+};
+
+exports.createSkinForHero = async (req, res) => {
+    const { id_hero } = req.params;
+    const { name, diamond_price, skin_type, isBuyable } = req.body;
+
+    if (!name || diamond_price === undefined) {
+        return res.status(400).json({
+            message: "Field name dan diamond_price wajib diisi",
+        });
+    }
+
+    const parsedDiamondPrice = parseFloat(diamond_price);
+    if (isNaN(parsedDiamondPrice) || parsedDiamondPrice < 0) {
+        return res.status(400).json({ message: "diamond_price harus berupa angka positif" });
+    }
+
+    const allowedTypes = ["Basic", "Elite", "Special", "Epic", "Legend", "Starlight"];
+    if (skin_type && !allowedTypes.includes(skin_type)) {
+        return res.status(400).json({ message: `skin_type harus salah satu dari: ${allowedTypes.join(", ")}` });
+    }
+
+    try {
+        const hero = await Hero.findById(id_hero);
+        if (!hero) {
+            return res.status(404).json({ message: "Hero tidak ditemukan" });
+        }
+
+        const existingSkin = await Skin.findOne({ name: name.trim(), id_hero: id_hero });
+        if (existingSkin) {
+            return res.status(409).json({ message: "Skin dengan nama tersebut sudah ada untuk hero ini" });
+        }
+
+        const newSkin = new Skin({
+            name: name.trim(),
+            diamond_price: parsedDiamondPrice,
+            skin_type: skin_type || "Basic",
+            id_hero,
+            isBuyable: isBuyable !== undefined ? isBuyable : true
+        });
+
+        const savedSkin = await newSkin.save();
+
+        res.status(201).json({
+            message: "Skin berhasil ditambahkan ke hero",
+            skin: savedSkin,
+        });
+
+    } catch (error) {
+        console.error("Error creating skin:", error);
         res.status(500).json({ message: "Internal Server Error" });
     }
 };

@@ -46,10 +46,6 @@ const userSchema = new mongoose.Schema(
             type: Number,
             default: 0,
         },
-        battle_point: {
-            type: Number,
-            default: 0,
-        },
         experience: {
             type: Number,
             default: 0
