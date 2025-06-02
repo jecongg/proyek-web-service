@@ -575,3 +575,67 @@ exports.softDeleteUser = async (req, res) => {
     res.status(500).json({ message: "Gagal menghapus user.", error: err.message });
   }
 };
+exports.getHeroes = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: "User tidak ditemukan" });
+
+    const allHeroes = await Hero.find();
+
+    const ownedHeroIds = user.owned_heroes.map(id => id.toString());
+
+    const result = allHeroes.map(hero => ({
+      _id: hero._id,
+      name: hero.name,
+      role1: hero.role1,
+      role2: hero.role2,
+      image: hero.image,
+      status: ownedHeroIds.includes(hero._id.toString()) ? "owned" : "not owned"
+    }));
+
+    res.json({
+      message: "Berhasil mengambil data hero",
+      count: result.length,
+      heroes: result
+    });
+  } catch (error) {
+    console.error("Error getHeroes:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+exports.getSkins = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const user = await User.findById(userId).populate({
+      path: "owned_skins",
+      populate: { path: "id_hero", select: "name" }
+    });
+
+    if (!user) return res.status(404).json({ message: "User tidak ditemukan" });
+
+    const allSkins = await mongoose.model("Skin").find().populate("id_hero", "name");
+
+    const ownedSkinIds = user.owned_skins.map(skin => skin._id.toString());
+
+    const result = allSkins.map(skin => ({
+      _id: skin._id,
+      name: skin.name,
+      skin_type: skin.skin_type,
+      hero_name: skin.id_hero.name,
+      status: ownedSkinIds.includes(skin._id.toString()) ? "owned" : "not owned"
+    }));
+
+    res.json({
+      message: "Berhasil mengambil data skin",
+      count: result.length,
+      skins: result
+    });
+  } catch (error) {
+    console.error("Error getSkins:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};

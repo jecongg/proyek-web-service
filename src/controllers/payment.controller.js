@@ -93,3 +93,47 @@ exports.midtransWebhook = async (req, res) => {
         res.status(500).send("Internal Server Error");
     }
 };
+exports.buyDiamond = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { diamonds, amount } = req.body;
+
+        if (!diamonds || !amount || amount <= 0) {
+            return res.status(400).json({ message: "Invalid diamonds or amount" });
+        }
+
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        const orderId = `diamond-${userId}-${Date.now()}`;
+
+        const customer = {
+            email: user.email,
+        };
+
+        const transaction = await createTransaction(orderId, amount, customer);
+
+        await PaymentHistory.create({
+            user_id: userId,
+            order_id: orderId,
+            total: amount,
+            payment_method: null,
+            type: "diamond",
+            diamond_amount: diamonds,
+            status: "pending",
+        });
+
+        res.status(200).json({
+            token: transaction.token,
+            redirect_url: transaction.redirect_url,
+        });
+    } catch (err) {
+        console.error("Diamond top-up error:", err);
+        res.status(500).json({
+            message: "Failed to initiate diamond top-up",
+            err,
+        });
+    }
+};
