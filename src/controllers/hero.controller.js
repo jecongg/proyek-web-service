@@ -1,4 +1,85 @@
 const Hero = require("../models/Hero");
+const { google } = require("googleapis");
+const stream = require("stream");
+const path = require("path");
+const fs = require("fs");
+const multer = require('multer');
+const authJwt = require("../middleware/authJwt");
+const User = require("../models/User");
+
+const GOOGLE_DRIVE_FOLDER_ID = process.env.GOOGLE_DRIVE_FOLDER_ID || "1XxpeRYeLhYFFpWd6raORectRDXw-K8ZE";
+const SERVICE_ACCOUNT_KEY_PATH = path.join(__dirname, "your-service-account-key.json");
+
+async function getDriveService() {
+    try {
+        if (!fs.existsSync(SERVICE_ACCOUNT_KEY_PATH)) {
+            console.error("File Service Account Key tidak ditemukan di:", SERVICE_ACCOUNT_KEY_PATH);
+            console.error("Pastikan 'your-service-account-key.json' ada dan path-nya benar.");
+            console.error("Inisialisasi Google Drive dilewati.");
+            return null;
+        }
+
+        const auth = new google.auth.GoogleAuth({
+            keyFile: SERVICE_ACCOUNT_KEY_PATH,
+            scopes: ["https://www.googleapis.com/auth/drive.file"],
+        });
+        const authClient = await auth.getClient();
+        return google.drive({ version: "v3", auth: authClient });
+    } catch (error) {
+        console.error("Error saat inisialisasi layanan Google Drive:", error.message);
+        console.error("Detail:", error);
+        console.error("Pastikan service account key Anda valid dan memiliki izin Drive API.");
+        return null;
+    }
+}
+
+async function uploadImageToDrive(imageBuffer, fileName, mimeType, driveService) {
+    if (!driveService) {
+        console.warn("Layanan Google Drive tidak tersedia. Upload dilewati.");
+        return null;
+    }
+    if (!imageBuffer || !mimeType) {
+        console.warn("Tidak ada data gambar (buffer atau mimetype) untuk diupload. Upload dilewati.");
+        return null;
+    }
+
+    try {
+        const imageStream = new stream.PassThrough();
+        imageStream.end(imageBuffer);
+
+        const fileMetadata = {
+            name: fileName,
+            parents: [GOOGLE_DRIVE_FOLDER_ID],
+        };
+
+        const media = {
+            mimeType: mimeType,
+            body: imageStream,
+        };
+
+        console.log(`Mengunggah gambar '${fileName}' ke folder Google Drive ID '${GOOGLE_DRIVE_FOLDER_ID}'...`);
+        const response = await driveService.files.create({
+            resource: fileMetadata,
+            media: media,
+            fields: "id, webViewLink, webContentLink",
+        });
+
+        console.log("Gambar berhasil diunggah ke Drive. File ID:", response.data.id);
+        return {
+            id: response.data.id,
+            webViewLink: response.data.webViewLink,
+            webContentLink: response.data.webContentLink,
+        };
+    } catch (error) {
+        console.error("Error saat mengunggah gambar ke Google Drive:", error.message);
+        if (error.response && error.response.data) {
+             console.error("Detail Error Google Drive API:", error.response.data.error);
+        } else if (error.errors) {
+             console.error("Array Error Google Drive API:", error.errors);
+        }
+        return null;
+    }
+}
 
 exports.updateHargaHero = async (req, res) => {
     const { id_hero } = req.params;
@@ -72,109 +153,43 @@ exports.updateHargaHero = async (req, res) => {
         res.status(500).json({ message: "Internal Server Error" });
     }
 };
-
-exports.createHero = async (req, res) => {
-    const { name, diamond_price, battle_point_price, role1, role2 } = req.body;
-
-    if (!name || diamond_price === undefined || battle_point_price === undefined) {
-        return res.status(400).json({
-            message: "Field name, diamond_price, dan battle_point_price wajib diisi",
-        });
-    }
-
-    const parsedDiamondPrice = parseFloat(diamond_price);
-    const parsedBattlePointPrice = parseFloat(battle_point_price);
-
-    if (isNaN(parsedDiamondPrice) || parsedDiamondPrice < 0) {
-        return res.status(400).json({ message: "diamond_price harus berupa angka positif" });
-    }
-
-    if (isNaN(parsedBattlePointPrice) || parsedBattlePointPrice < 0) {
-        return res.status(400).json({ message: "battle_point_price harus berupa angka positif" });
-    }
-
-    try {
-        const existingHero = await Hero.findOne({ name: name.trim() });
-        if (existingHero) {
-            return res.status(409).json({ message: "Hero dengan nama tersebut sudah ada" });
-        }
-
-        const newHero = new Hero({
-            name: name.trim(),
-            diamond_price: parsedDiamondPrice,
-            battle_point_price: parsedBattlePointPrice,
-            role1,
-            role2,
-        });
-
-        const savedHero = await newHero.save();
-
-        res.status(201).json({
-            message: "Hero berhasil ditambahkan ke shop",
-            hero: savedHero,
-        });
-    } catch (error) {
-        console.error("Error creating hero:", error);
-        res.status(500).json({ message: "Internal Server Error" });
-    }
-};
-
 exports.getAllHeroes = async (req, res) => {
     try {
-        // Mengambil token dari header
-        const token = req.headers["x-auth-token"];
-
-        // Mengambil semua hero dari database
-        let heroes = await Hero.find(); 
-
-        // Jika ada token (user login)
-        if (token) {
-            try {
-                // Verifikasi token untuk mendapatkan ID user
-                const decoded = jwt.verify(token, process.env.JWT_SECRET || "secret_key");
-                const userId = decoded.id;
-
-                // Cari user berdasarkan ID dan ambil hanya field 'owned_heroes'
-                const user = await User.findById(userId).select("owned_heroes");
-
-                // Jika user tidak ditemukan (mungkin token tidak valid/lama)
-                if (!user) {
-                    // Anda bisa memilih untuk mengembalikan error atau 
-                    // mengembalikan semua hero tanpa status 'owned'
-                    // Di sini kita kembalikan semua hero tanpa status 'owned'
-                    console.warn("User not found for token, returning heroes without ownership status.");
-                    return res.json(heroes);
-                }
-
-                // Ubah 'owned_heroes' menjadi Set untuk pengecekan yang efisien
-                const ownedHeroIds = new Set(user.owned_heroes.map(id => id.toString()));
-
-                // Tambahkan properti 'owned' ke setiap hero
-                heroes = heroes.map(hero => {
-                    const isOwned = ownedHeroIds.has(hero._id.toString());
-                    return {
-                        ...hero._doc, // Gunakan _doc untuk mendapatkan objek data murni Mongoose
-                        owned: isOwned,
-                    };
-                });
-
-            } catch (jwtError) {
-                // Jika token tidak valid (error saat verify), 
-                // kita anggap sebagai user non-login dan kembalikan hero tanpa status 'owned'.
-                console.warn("Invalid token, returning heroes without ownership status:", jwtError.message);
-                // Tetap kembalikan 'heroes' yang asli tanpa status 'owned'
-            }
+        const heroes = await Hero.find();
+        
+        // Jika user adalah admin, semua hero dianggap owned
+        if (req.user.role === "Admin") {
+            const heroesWithOwnedStatus = heroes.map(hero => ({
+                ...hero.toObject(),
+                is_owned: true
+            }));
+            return res.json({
+                message: "Success fetch heroes!",
+                count_hero: heroesWithOwnedStatus.length,
+                heroes: heroesWithOwnedStatus
+            });
         }
 
-        // Kembalikan daftar hero (dengan atau tanpa status 'owned')
-        res.json(heroes);
+        // Jika user adalah player, cek hero yang dimiliki
+        const user = await User.findById(req.user.id).populate('owned_heroes');
+        const ownedHeroIds = user.owned_heroes.map(hero => hero._id.toString());
 
+        const heroesWithOwnedStatus = heroes.map(hero => ({
+            ...hero.toObject(),
+            is_owned: ownedHeroIds.includes(hero._id.toString())
+        }));
+
+        res.json({
+            message: "Success fetch heroes!",
+            count_hero: heroesWithOwnedStatus.length,
+            heroes: heroesWithOwnedStatus
+        });
     } catch (error) {
-        // Tangani error internal server saat mengambil data hero
-        console.error("Error fetching heroes:", error);
+        console.error("Error getAllHeroes:", error);
         res.status(500).json({ message: "Internal Server Error" });
     }
 };
+
 exports.createHero = async (req, res) => {
     const { name, diamond_price, battle_point_price, role1, role2 } = req.body;
 
@@ -190,7 +205,6 @@ exports.createHero = async (req, res) => {
     if (isNaN(parsedDiamondPrice) || parsedDiamondPrice < 0) {
         return res.status(400).json({ message: "diamond_price harus berupa angka positif" });
     }
-
     if (isNaN(parsedBattlePointPrice) || parsedBattlePointPrice < 0) {
         return res.status(400).json({ message: "battle_point_price harus berupa angka positif" });
     }
@@ -204,22 +218,59 @@ exports.createHero = async (req, res) => {
             return res.status(409).json({ message: "Hero dengan nama tersebut sudah ada" });
         }
 
-        const newHero = new Hero({
+        let driveImageDetails = null;
+
+        if (req.file) {
+            const driveService = await getDriveService();
+            if (driveService) {
+                const imageBuffer = req.file.buffer;
+                const originalFileName = req.file.originalname;
+                const mimeType = req.file.mimetype;
+
+                const safeName = name.trim().replace(/[^a-zA-Z0-9_.-]/g, '_');
+                const timestamp = Date.now();
+                const uniqueFileName = `${safeName}_${timestamp}_${originalFileName}`;
+
+                driveImageDetails = await uploadImageToDrive(
+                    imageBuffer,
+                    uniqueFileName,
+                    mimeType,
+                    driveService
+                );
+            } else {
+                console.warn("Tidak dapat menginisialisasi layanan Drive. Gambar tidak akan diunggah.");
+            }
+        } else {
+            console.log("Tidak ada file gambar yang diunggah oleh pengguna.");
+        }
+
+        const newHeroData = {
             name: name.trim(),
             diamond_price: parsedDiamondPrice,
             battle_point_price: parsedBattlePointPrice,
             role1: normalizedRole1,
             role2: normalizedRole2,
-        });
+            heroImageUrl: null,
+        };
 
+        if (driveImageDetails && driveImageDetails.webViewLink) {
+            newHeroData.heroImageUrl = driveImageDetails.webViewLink;
+        }
+
+        const newHero = new Hero(newHeroData);
         const savedHero = await newHero.save();
 
         res.status(201).json({
             message: "Hero berhasil ditambahkan ke shop",
             hero: savedHero,
+            driveUploadStatus: driveImageDetails ? `Berhasil (ID: ${driveImageDetails.id})` : (req.file ? "Gagal atau Dilewati" : "Tidak ada file diunggah")
         });
+
     } catch (error) {
-        console.error("Error creating hero:", error);
-        res.status(500).json({ message: "Internal Server Error" });
+        console.error("Error saat membuat hero:", error);
+        if (error.code === 'LIMIT_FILE_SIZE' || error instanceof multer.MulterError) {
+             return res.status(400).json({ message: "Error file upload: " + error.message });
+        }
+        res.status(500).json({ message: "Internal Server Error", error: error.message });
     }
 };

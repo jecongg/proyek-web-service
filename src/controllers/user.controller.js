@@ -297,69 +297,34 @@ exports.getPlayerProfile = async (req, res) => {
     try {
         const { id } = req.params;
 
-        // Validasi ObjectId
-        if (!mongoose.Types.ObjectId.isValid(id)) {
-            return res.status(400).json({ 
-                message: "ID tidak valid. Mohon masukkan ID yang benar" 
-            });
+        // Cari user yang ingin diakses
+        const targetUser = await User.findById(id);
+        if (!targetUser) {
+            return res.status(404).json({ message: "User tidak ditemukan" });
         }
 
-        // Cari user berdasarkan ID
-        const player = await User.findById(id)
-            .select('username diamond battle_point experience level starlight owned_heroes owned_skins')
-            .populate({
-                path: 'owned_heroes',
-                select: 'name role1 role2'
-            })
-            .populate({
-                path: 'owned_skins',
-                select: 'name skin_type',
-                populate: {
-                    path: 'id_hero',
-                    select: 'name'
-                }
-            });
-
-        if (!player) {
-            return res.status(404).json({ message: "Pemain tidak ditemukan" });
-        }
-
-        // Hitung total hero dan skin
-        const totalHeroes = player.owned_heroes.length;
-        const totalSkins = player.owned_skins.length;
-
-        // Hitung XP untuk level berikutnya
-        const xpForNextLevel = player.level * 1000; // Contoh: level 1 butuh 1000 XP, level 2 butuh 2000 XP, dst
-        const xpProgress = player.experience % xpForNextLevel;
-        const xpPercentage = Math.floor((xpProgress / xpForNextLevel) * 100);
-
-        // Format response
-        const response = {
-            username: player.username,
-            diamond: player.diamond,
-            battle_point: player.battle_point,
-            experience: {
-                current: player.experience,
-                level: player.level,
-                next_level: player.level + 1,
-                xp_for_next_level: xpForNextLevel,
-                current_xp: xpProgress,
-                percentage: xpPercentage
-            },
-            starlight_status: player.starlight,
-            heroes: {
-                total: totalHeroes,
-                list: player.owned_heroes
-            },
-            skins: {
-                total: totalSkins,
-                list: player.owned_skins
+        // Jika user yang mengakses adalah Player
+        if (req.user.role === "Player") {
+            // Player tidak bisa mengakses profile Admin
+            if (targetUser.role === "Admin") {
+                return res.status(403).json({ 
+                    message: "Akses ditolak. Player tidak dapat mengakses profile Admin" 
+                });
             }
-        };
+        }
+
+        // Populate data user
+        const user = await User.findById(id)
+            .select("-password -__v")
+            .populate("owned_heroes")
+            .populate({
+                path: "owned_skins",
+                populate: { path: "id_hero" },
+            });
 
         res.json({
-            message: "Berhasil mengambil data profil pemain",
-            data: response
+            message: "Success fetch profile!",
+            user,
         });
     } catch (error) {
         console.error("Error getPlayerProfile:", error);

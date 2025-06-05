@@ -2,6 +2,10 @@ require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
 
+// Debug: Log environment variables
+console.log("MONGODB_URI:", process.env.MONGODB_URI);
+console.log("PORT:", process.env.PORT);
+
 const userRoutes = require("./src/routes/user.route");
 const skinRoutes = require("./src/routes/skin.route");
 const heroRoutes = require("./src/routes/hero.route");
