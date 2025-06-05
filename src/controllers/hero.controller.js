@@ -6,6 +6,7 @@ const fs = require("fs");
 const multer = require('multer');
 const authJwt = require("../middleware/authJwt");
 const User = require("../models/User");
+const { uploadImageToDrive, HERO_DRIVE_FOLDER_ID } = require("../config/googleDrive");
 
 const GOOGLE_DRIVE_FOLDER_ID = process.env.GOOGLE_DRIVE_FOLDER_ID || "1XxpeRYeLhYFFpWd6raORectRDXw-K8ZE";
 const SERVICE_ACCOUNT_KEY_PATH = path.join(__dirname, "your-service-account-key.json");
@@ -33,53 +34,6 @@ async function getDriveService() {
     }
 }
 
-async function uploadImageToDrive(imageBuffer, fileName, mimeType, driveService) {
-    if (!driveService) {
-        console.warn("Layanan Google Drive tidak tersedia. Upload dilewati.");
-        return null;
-    }
-    if (!imageBuffer || !mimeType) {
-        console.warn("Tidak ada data gambar (buffer atau mimetype) untuk diupload. Upload dilewati.");
-        return null;
-    }
-
-    try {
-        const imageStream = new stream.PassThrough();
-        imageStream.end(imageBuffer);
-
-        const fileMetadata = {
-            name: fileName,
-            parents: [GOOGLE_DRIVE_FOLDER_ID],
-        };
-
-        const media = {
-            mimeType: mimeType,
-            body: imageStream,
-        };
-
-        console.log(`Mengunggah gambar '${fileName}' ke folder Google Drive ID '${GOOGLE_DRIVE_FOLDER_ID}'...`);
-        const response = await driveService.files.create({
-            resource: fileMetadata,
-            media: media,
-            fields: "id, webViewLink, webContentLink",
-        });
-
-        console.log("Gambar berhasil diunggah ke Drive. File ID:", response.data.id);
-        return {
-            id: response.data.id,
-            webViewLink: response.data.webViewLink,
-            webContentLink: response.data.webContentLink,
-        };
-    } catch (error) {
-        console.error("Error saat mengunggah gambar ke Google Drive:", error.message);
-        if (error.response && error.response.data) {
-             console.error("Detail Error Google Drive API:", error.response.data.error);
-        } else if (error.errors) {
-             console.error("Array Error Google Drive API:", error.errors);
-        }
-        return null;
-    }
-}
 
 exports.updateHargaHero = async (req, res) => {
     const { id_hero } = req.params;
@@ -205,12 +159,10 @@ exports.createHero = async (req, res) => {
     if (isNaN(parsedDiamondPrice) || parsedDiamondPrice < 0) {
         return res.status(400).json({ message: "diamond_price harus berupa angka positif" });
     }
+
     if (isNaN(parsedBattlePointPrice) || parsedBattlePointPrice < 0) {
         return res.status(400).json({ message: "battle_point_price harus berupa angka positif" });
     }
-
-    const normalizedRole1 = role1 && role1.trim() !== "" ? role1.trim() : null;
-    const normalizedRole2 = role2 && role2.trim() !== "" ? role2.trim() : null;
 
     try {
         const existingHero = await Hero.findOne({ name: name.trim() });
@@ -218,59 +170,165 @@ exports.createHero = async (req, res) => {
             return res.status(409).json({ message: "Hero dengan nama tersebut sudah ada" });
         }
 
-        let driveImageDetails = null;
-
+        let heroImageUrl = null;
         if (req.file) {
-            const driveService = await getDriveService();
-            if (driveService) {
-                const imageBuffer = req.file.buffer;
-                const originalFileName = req.file.originalname;
-                const mimeType = req.file.mimetype;
+            const imageBuffer = req.file.buffer;
+            const originalFileName = req.file.originalname;
+            const mimeType = req.file.mimetype;
 
-                const safeName = name.trim().replace(/[^a-zA-Z0-9_.-]/g, '_');
-                const timestamp = Date.now();
-                const uniqueFileName = `${safeName}_${timestamp}_${originalFileName}`;
+            const safeName = name.trim().replace(/[^a-zA-Z0-9_.-]/g, '_');
+            const timestamp = Date.now();
+            const uniqueFileName = `hero_${safeName}_${timestamp}_${originalFileName}`;
 
-                driveImageDetails = await uploadImageToDrive(
-                    imageBuffer,
-                    uniqueFileName,
-                    mimeType,
-                    driveService
-                );
-            } else {
-                console.warn("Tidak dapat menginisialisasi layanan Drive. Gambar tidak akan diunggah.");
+            const driveImageDetails = await uploadImageToDrive(
+                imageBuffer,
+                uniqueFileName,
+                mimeType,
+                HERO_DRIVE_FOLDER_ID
+            );
+
+            if (driveImageDetails && driveImageDetails.webViewLink) {
+                heroImageUrl = driveImageDetails.webViewLink;
             }
-        } else {
-            console.log("Tidak ada file gambar yang diunggah oleh pengguna.");
         }
 
-        const newHeroData = {
+        const newHero = new Hero({
             name: name.trim(),
             diamond_price: parsedDiamondPrice,
             battle_point_price: parsedBattlePointPrice,
-            role1: normalizedRole1,
-            role2: normalizedRole2,
-            heroImageUrl: null,
-        };
+            role1,
+            role2,
+            image_hero: heroImageUrl
+        });
 
-        if (driveImageDetails && driveImageDetails.webViewLink) {
-            newHeroData.heroImageUrl = driveImageDetails.webViewLink;
-        }
-
-        const newHero = new Hero(newHeroData);
         const savedHero = await newHero.save();
 
         res.status(201).json({
             message: "Hero berhasil ditambahkan ke shop",
             hero: savedHero,
-            driveUploadStatus: driveImageDetails ? `Berhasil (ID: ${driveImageDetails.id})` : (req.file ? "Gagal atau Dilewati" : "Tidak ada file diunggah")
+            driveUploadStatus: heroImageUrl ? "Berhasil" : (req.file ? "Gagal" : "Tidak ada file diunggah")
         });
-
     } catch (error) {
-        console.error("Error saat membuat hero:", error);
-        if (error.code === 'LIMIT_FILE_SIZE' || error instanceof multer.MulterError) {
-             return res.status(400).json({ message: "Error file upload: " + error.message });
+        console.error("Error creating hero:", error);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+};
+
+exports.getHeroById = async (req, res) => {
+    try {
+        const hero = await Hero.findById(req.params.id);
+        if (!hero) {
+            return res.status(404).json({ message: "Hero tidak ditemukan" });
         }
-        res.status(500).json({ message: "Internal Server Error", error: error.message });
+
+        // Jika user adalah admin, hero dianggap owned
+        if (req.user.role === "Admin") {
+            return res.json({
+                message: "Success fetch hero!",
+                hero: {
+                    ...hero.toObject(),
+                    is_owned: true
+                }
+            });
+        }
+
+        // Jika user adalah player, cek apakah hero dimiliki
+        const user = await User.findById(req.user.id).populate('owned_heroes');
+        const isOwned = user.owned_heroes.some(ownedHero => 
+            ownedHero._id.toString() === hero._id.toString()
+        );
+
+        res.json({
+            message: "Success fetch hero!",
+            hero: {
+                ...hero.toObject(),
+                is_owned: isOwned
+            }
+        });
+    } catch (error) {
+        console.error("Error getHeroById:", error);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+};
+
+exports.updateHero = async (req, res) => {
+    try {
+        const { name, diamond_price, battle_point_price, role1, role2 } = req.body;
+        const updateFields = {};
+
+        if (name) updateFields.name = name.trim();
+        if (diamond_price !== undefined) {
+            const parsedDiamondPrice = parseFloat(diamond_price);
+            if (isNaN(parsedDiamondPrice) || parsedDiamondPrice < 0) {
+                return res.status(400).json({ message: "diamond_price harus berupa angka positif" });
+            }
+            updateFields.diamond_price = parsedDiamondPrice;
+        }
+        if (battle_point_price !== undefined) {
+            const parsedBattlePointPrice = parseFloat(battle_point_price);
+            if (isNaN(parsedBattlePointPrice) || parsedBattlePointPrice < 0) {
+                return res.status(400).json({ message: "battle_point_price harus berupa angka positif" });
+            }
+            updateFields.battle_point_price = parsedBattlePointPrice;
+        }
+        if (role1) updateFields.role1 = role1;
+        if (role2) updateFields.role2 = role2;
+
+        if (req.file) {
+            const imageBuffer = req.file.buffer;
+            const originalFileName = req.file.originalname;
+            const mimeType = req.file.mimetype;
+
+            const safeName = (name || "hero").trim().replace(/[^a-zA-Z0-9_.-]/g, '_');
+            const timestamp = Date.now();
+            const uniqueFileName = `hero_${safeName}_${timestamp}_${originalFileName}`;
+
+            const driveImageDetails = await uploadImageToDrive(
+                imageBuffer,
+                uniqueFileName,
+                mimeType,
+                HERO_DRIVE_FOLDER_ID
+            );
+
+            if (driveImageDetails && driveImageDetails.webViewLink) {
+                updateFields.image_url = driveImageDetails.webViewLink;
+            }
+        }
+
+        const updatedHero = await Hero.findByIdAndUpdate(
+            req.params.id,
+            updateFields,
+            { new: true, runValidators: true }
+        );
+
+        if (!updatedHero) {
+            return res.status(404).json({ message: "Hero tidak ditemukan" });
+        }
+
+        res.json({
+            message: "Hero berhasil diupdate",
+            hero: updatedHero
+        });
+    } catch (error) {
+        console.error("Error updateHero:", error);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+};
+
+exports.deleteHero = async (req, res) => {
+    try {
+        const deletedHero = await Hero.findByIdAndDelete(req.params.id);
+        
+        if (!deletedHero) {
+            return res.status(404).json({ message: "Hero tidak ditemukan" });
+        }
+
+        res.json({
+            message: "Hero berhasil dihapus",
+            hero: deletedHero
+        });
+    } catch (error) {
+        console.error("Error deleteHero:", error);
+        res.status(500).json({ message: "Internal Server Error" });
     }
 };

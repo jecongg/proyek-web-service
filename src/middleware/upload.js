@@ -1,22 +1,29 @@
 const multer = require('multer');
 const path = require('path');
+const fs = require("fs"); // Ditambahkan untuk membaca service account key
 
-// Konfigurasi storage
-const storage = multer.diskStorage({
+
+// Konfigurasi storage untuk memory storage (untuk hero dan skin)
+const memoryStorage = multer.memoryStorage();
+
+// Konfigurasi storage untuk disk storage (untuk profile picture)
+const diskStorage = multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, 'uploads/profile_pictures/');
+        const uploadDir = 'uploads/profile_pictures/';
+        // Buat direktori jika belum ada
+        if (!fs.existsSync(uploadDir)) {
+            fs.mkdirSync(uploadDir, { recursive: true });
+        }
+        cb(null, uploadDir);
     },
     filename: function (req, file, cb) {
-        // Ambil username dari request body
         const username = req.body.username || 'default';
-        // Buat nama file dengan format profile-username.jpg
         cb(null, `profile-${username}${path.extname(file.originalname)}`);
     }
 });
 
-// Filter file
-const fileFilter = (req, file, cb) => {
-    // Hanya terima file JPEG, JPG, dan PNG
+// Filter file untuk gambar
+const imageFilter = (req, file, cb) => {
     const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png'];
     
     if (allowedMimeTypes.includes(file.mimetype)) {
@@ -26,13 +33,22 @@ const fileFilter = (req, file, cb) => {
     }
 };
 
-// Konfigurasi upload
-const upload = multer({
-    storage: storage,
-    fileFilter: fileFilter,
+// Konfigurasi upload untuk hero dan skin (menggunakan memory storage)
+const uploadImage = multer({
+    storage: memoryStorage,
+    fileFilter: imageFilter,
     limits: {
-        fileSize: 5 * 1024 * 1024, // Batasi ukuran file 5MB
-        files: 1 // Batasi hanya 1 file
+        fileSize: 5 * 1024 * 1024 // 5MB
+    }
+});
+
+// Konfigurasi upload untuk profile picture (menggunakan disk storage)
+const uploadProfilePicture = multer({
+    storage: diskStorage,
+    fileFilter: imageFilter,
+    limits: {
+        fileSize: 5 * 1024 * 1024, // 5MB
+        files: 1 // Hanya 1 file
     }
 }).single('profile_picture');
 
@@ -47,7 +63,17 @@ const handleMulterError = (err, req, res, next) => {
         }
         return res.status(400).json({ message: err.message });
     }
+    if (err.message) {
+        return res.status(400).json({ message: err.message });
+    }
     next(err);
 };
 
-module.exports = { upload, handleMulterError }; 
+module.exports = {
+    uploadImage,
+    uploadProfilePicture,
+    handleMulterError
+};
+
+const GOOGLE_DRIVE_FOLDER_ID = process.env.SKIN_GOOGLE_DRIVE_FOLDER_ID || "1XxpeRYeLhYFFpWd6raORectRDXw-K8ZE";
+const SERVICE_ACCOUNT_KEY_PATH = path.join(__dirname, "../config/your-service-account-key.json"); 

@@ -2,25 +2,21 @@ const express = require("express");
 const router = express.Router();
 const heroController = require("../controllers/hero.controller");
 const authJwt = require("../middleware/authJwt");
-const multer = require('multer');
+const { uploadImage } = require("../middleware/upload");
 
-const storage = multer.memoryStorage();
+// Get all heroes
+router.get("/", heroController.getAllHeroes);
 
-const upload = multer({
-    storage: storage,
-    limits: { fileSize: 5 * 1024 * 1024 },
-    fileFilter: (req, file, cb) => {
-        if (file.mimetype.startsWith("image/")) {
-            cb(null, true);
-        } else {
-            cb(new Error("Hanya file gambar yang diizinkan! Pastikan format file Anda adalah gambar (contoh: JPEG, PNG)."), false);
-        }
-    }
-});
+// Create new hero (Admin only)
+router.post("/", [authJwt.verifyToken, authJwt.isAdmin, uploadImage.single('image')], heroController.createHero);
 
-router.put("/:id_hero", [authJwt.verifyToken, authJwt.isAdmin], heroController.updateHargaHero);
-router.post("/",[authJwt.verifyToken, authJwt.isAdmin, upload.single('heroImageFile')],heroController.createHero);
-router.get("/", [authJwt.verifyToken], heroController.getAllHeroes);
+// Get hero by ID
+router.get("/:id", heroController.getHeroById);
 
+// Update hero (Admin only)
+router.put("/:id", [authJwt.verifyToken, authJwt.isAdmin], heroController.updateHero);
+
+// Delete hero (Admin only)
+router.delete("/:id", [authJwt.verifyToken, authJwt.isAdmin], heroController.deleteHero);
 
 module.exports = router;

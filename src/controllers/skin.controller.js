@@ -1,90 +1,9 @@
 const Skin = require("../models/Skin");
 const User = require("../models/User");
 const Hero = require("../models/Hero");
-const { google } = require("googleapis"); // Ditambahkan untuk Google Drive
-const stream = require("stream"); // Ditambahkan untuk upload stream
-const path = require("path"); // Ditambahkan untuk path service account
-const fs = require("fs"); // Ditambahkan untuk membaca service account key
-const multer = require('multer');
+const { uploadImageToDrive, SKIN_DRIVE_FOLDER_ID } = require("../config/googleDrive");
+const stream = require("stream");
 
-const storage = multer.memoryStorage();
-
-const upload = multer({
-    storage: storage,
-    limits: { fileSize: 5 * 1024 * 1024 },
-    fileFilter: (req, file, cb) => {
-        if (file.mimetype.startsWith("image/")) {
-            cb(null, true);
-        } else {
-            cb(new Error("Hanya file gambar yang diizinkan!"), false);
-        }
-    }
-});
-exports.uploadMiddleware = upload;
-
-const GOOGLE_DRIVE_FOLDER_ID = process.env.SKIN_GOOGLE_DRIVE_FOLDER_ID || "1XxpeRYeLhYFFpWd6raORectRDXw-K8ZE";
-const SERVICE_ACCOUNT_KEY_PATH = path.join(__dirname, "../config/your-service-account-key.json");
-
-async function getDriveService() {
-    try {
-        if (!fs.existsSync(SERVICE_ACCOUNT_KEY_PATH)) {
-            console.error("File Service Account Key tidak ditemukan di:", SERVICE_ACCOUNT_KEY_PATH);
-            return null;
-        }
-        const auth = new google.auth.GoogleAuth({
-            keyFile: SERVICE_ACCOUNT_KEY_PATH,
-            scopes: ["https://www.googleapis.com/auth/drive.file"],
-        });
-        const authClient = await auth.getClient();
-        return google.drive({ version: "v3", auth: authClient });
-    } catch (error) {
-        console.error("Error saat inisialisasi layanan Google Drive:", error.message);
-        return null;
-    }
-}
-
-async function uploadImageToDrive(imageBuffer, fileName, mimeType, driveService) {
-    if (!driveService) {
-        console.warn("Layanan Google Drive tidak tersedia. Upload dilewati.");
-        return null;
-    }
-    if (!imageBuffer || !mimeType) {
-        console.warn("Tidak ada data gambar (buffer atau mimetype) untuk diupload. Upload dilewati.");
-        return null;
-    }
-    try {
-        const imageStream = new stream.PassThrough();
-        imageStream.end(imageBuffer);
-        const fileMetadata = {
-            name: fileName,
-            parents: [GOOGLE_DRIVE_FOLDER_ID],
-        };
-        const media = {
-            mimeType: mimeType,
-            body: imageStream,
-        };
-        console.log(`Mengunggah gambar skin '${fileName}' ke folder Google Drive ID '${GOOGLE_DRIVE_FOLDER_ID}'...`);
-        const response = await driveService.files.create({
-            resource: fileMetadata,
-            media: media,
-            fields: "id, webViewLink, webContentLink",
-        });
-        console.log("Gambar skin berhasil diunggah ke Drive. File ID:", response.data.id);
-        return {
-            id: response.data.id,
-            webViewLink: response.data.webViewLink,
-            webContentLink: response.data.webContentLink,
-        };
-    } catch (error) {
-        console.error("Error saat mengunggah gambar skin ke Google Drive:", error.message);
-        if (error.response && error.response.data) {
-             console.error("Detail Error Google Drive API:", error.response.data.error);
-        } else if (error.errors) {
-             console.error("Array Error Google Drive API:", error.errors);
-        }
-        return null;
-    }
-}
 exports.getAllSkins = async (req, res) => {
     try {
         const skins = await Skin.find().populate('id_hero');
@@ -272,10 +191,12 @@ exports.createSkinForHero = async (req, res) => {
 
     const parsedDiamondPrice = parseFloat(diamond_price);
     if (isNaN(parsedDiamondPrice) || parsedDiamondPrice < 0) {
-        return res.status(400).json({ message: "diamond_price harus berupa angka positif" });
+        return res.status(400).json({
+            message: "diamond_price harus berupa angka positif",
+        });
     }
 
-    const allowedTypes = ["Basic", "Elite", "Special", "Epic", "Legend", "Starlight"];
+    const allowedTypes = ["Basic", "Elite", "Special", "Epic", "Legend"];
     if (skin_type && !allowedTypes.includes(skin_type)) {
         return res.status(400).json({ message: `skin_type harus salah satu dari: ${allowedTypes.join(", ")}` });
     }
@@ -300,34 +221,26 @@ exports.createSkinForHero = async (req, res) => {
             return res.status(409).json({ message: "Skin sudah ada" });
         }
 
-        let driveImageDetails = null;
         let skinImageUrl = null;
-
         if (req.file) {
-            const driveService = await getDriveService();
-            if (driveService) {
-                const imageBuffer = req.file.buffer;
-                const originalFileName = req.file.originalname;
-                const mimeType = req.file.mimetype;
+            const imageBuffer = req.file.buffer;
+            const originalFileName = req.file.originalname;
+            const mimeType = req.file.mimetype;
 
-                const safeName = name.trim().replace(/[^a-zA-Z0-9_.-]/g, '_');
-                const timestamp = Date.now();
-                const uniqueFileName = `skin_${safeName}_${timestamp}_${originalFileName}`;
+            const safeName = name.trim().replace(/[^a-zA-Z0-9_.-]/g, '_');
+            const timestamp = Date.now();
+            const uniqueFileName = `skin_${safeName}_${timestamp}_${originalFileName}`;
 
-                driveImageDetails = await uploadImageToDrive(
-                    imageBuffer,
-                    uniqueFileName,
-                    mimeType,
-                    driveService
-                );
-                if (driveImageDetails && driveImageDetails.webViewLink) {
-                    skinImageUrl = driveImageDetails.webViewLink;
-                }
-            } else {
-                console.warn("Layanan Google Drive tidak dapat diinisialisasi. Gambar skin tidak akan diunggah.");
+            const driveImageDetails = await uploadImageToDrive(
+                imageBuffer,
+                uniqueFileName,
+                mimeType,
+                SKIN_DRIVE_FOLDER_ID
+            );
+
+            if (driveImageDetails && driveImageDetails.webViewLink) {
+                skinImageUrl = driveImageDetails.webViewLink;
             }
-        } else {
-            console.log("Tidak ada file gambar skin yang diunggah.");
         }
 
         const newSkin = new Skin({
@@ -344,7 +257,7 @@ exports.createSkinForHero = async (req, res) => {
         res.status(201).json({
             message: "Skin berhasil ditambahkan ke hero",
             skin: savedSkin,
-            driveUploadStatus: driveImageDetails ? `Berhasil (ID: ${driveImageDetails.id})` : (req.file ? "Gagal atau Dilewati" : "Tidak ada file diunggah")
+            driveUploadStatus: skinImageUrl ? "Berhasil" : (req.file ? "Gagal" : "Tidak ada file diunggah")
         });
 
     } catch (error) {
@@ -352,9 +265,67 @@ exports.createSkinForHero = async (req, res) => {
         if (error.name === 'ValidationError') {
             return res.status(400).json({ message: "Validasi gagal", errors: error.errors });
         }
-        if (error instanceof multer.MulterError) {
-            return res.status(400).json({ message: `Multer error: ${error.message}` });
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+};
+
+exports.getSkinById = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const skin = await Skin.findById(id).populate('id_hero');
+
+        if (!skin) {
+            return res.status(404).json({ message: "Skin tidak ditemukan" });
         }
+
+        // Jika user adalah admin, skin dianggap owned
+        if (req.user.role === "Admin") {
+            return res.json({
+                message: "Success fetch skin!",
+                skin: {
+                    ...skin.toObject(),
+                    is_owned: true
+                }
+            });
+        }
+
+        // Jika user adalah player, cek apakah skin dimiliki
+        const user = await User.findById(req.user.id).populate('owned_skins');
+        const ownedSkinIds = user.owned_skins.map(s => s._id.toString());
+        const isOwned = ownedSkinIds.includes(skin._id.toString());
+
+        res.json({
+            message: "Success fetch skin!",
+            skin: {
+                ...skin.toObject(),
+                is_owned: isOwned
+            }
+        });
+    } catch (error) {
+        console.error("Error getSkinById:", error);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+};
+
+exports.deleteSkin = async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        // Cari skin yang akan dihapus
+        const skin = await Skin.findById(id);
+        if (!skin) {
+            return res.status(404).json({ message: "Skin tidak ditemukan" });
+        }
+
+        // Hapus skin
+        await Skin.findByIdAndDelete(id);
+
+        res.json({
+            message: "Skin berhasil dihapus",
+            deletedSkin: skin
+        });
+    } catch (error) {
+        console.error("Error deleteSkin:", error);
         res.status(500).json({ message: "Internal Server Error" });
     }
 };
