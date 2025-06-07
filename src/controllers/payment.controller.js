@@ -120,7 +120,7 @@ exports.buyDiamond = async (req, res) => {
             order_id: orderId,
             total: amount,
             payment_method: null,
-            type: "diamond",
+            type: "topup",
             diamond_amount: diamonds,
             status: "pending",
         });

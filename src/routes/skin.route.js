@@ -2,9 +2,16 @@ const express = require("express");
 const router = express.Router();
 const skinController = require("../controllers/skin.controller");
 const { uploadSkinImage, handleMulterError } = require("../middleware/upload");
+const authJwt = require("../middleware/authJwt");
 
-router.get("/", skinController.getAllSkins);
-router.put("/:id_skin", skinController.updateHargaSkin);
-router.post("/:id_hero", [authJwt.verifyToken, authJwt.isAdmin], skinController.createSkinForHero);
+router.get("/", [authJwt.verifyToken], skinController.getAllSkins);
+
+router.put("/:id_skin", [authJwt.verifyToken, authJwt.isAdmin], skinController.updateHargaSkin);
+
+router.post("/hero/:id_hero", [authJwt.verifyToken, authJwt.isAdmin, uploadSkinImage, handleMulterError], skinController.createSkinForHero);
+
+router.get("/:id", [authJwt.verifyToken], skinController.getSkinById);
+
+router.delete("/:id", [authJwt.verifyToken, authJwt.isAdmin], skinController.deleteSkin);
 
 module.exports = router;

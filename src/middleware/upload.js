@@ -56,14 +56,15 @@ const imageFilter = (req, file, cb) => {
 };
 
 // Konfigurasi upload
-const upload = multer({
+const uploadProfilePicture = multer({
     storage: storage,
-    fileFilter: fileFilter,
+    fileFilter: imageFilter,
     limits: {
         fileSize: 5 * 1024 * 1024, // Batasi ukuran file 5MB
         files: 1 // Batasi hanya 1 file
     }
 }).single('profile_picture');
+
 
 const uploadHeroImage = multer({
     storage: diskStorageHero,
@@ -98,7 +99,6 @@ const handleMulterError = (err, req, res, next) => {
 };
 
 module.exports = {
-    uploadImage,
     uploadProfilePicture,
     handleMulterError,
     uploadHeroImage,

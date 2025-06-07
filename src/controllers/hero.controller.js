@@ -1,38 +1,6 @@
 const Hero = require("../models/Hero");
-const { google } = require("googleapis");
-const stream = require("stream");
 const path = require("path");
-const fs = require("fs");
-const multer = require('multer');
-const authJwt = require("../middleware/authJwt");
 const User = require("../models/User");
-const { uploadImageToDrive, HERO_DRIVE_FOLDER_ID } = require("../config/googleDrive");
-
-const GOOGLE_DRIVE_FOLDER_ID = process.env.GOOGLE_DRIVE_FOLDER_ID || "1XxpeRYeLhYFFpWd6raORectRDXw-K8ZE";
-const SERVICE_ACCOUNT_KEY_PATH = path.join(__dirname, "your-service-account-key.json");
-
-async function getDriveService() {
-    try {
-        if (!fs.existsSync(SERVICE_ACCOUNT_KEY_PATH)) {
-            console.error("File Service Account Key tidak ditemukan di:", SERVICE_ACCOUNT_KEY_PATH);
-            console.error("Pastikan 'your-service-account-key.json' ada dan path-nya benar.");
-            console.error("Inisialisasi Google Drive dilewati.");
-            return null;
-        }
-
-        const auth = new google.auth.GoogleAuth({
-            keyFile: SERVICE_ACCOUNT_KEY_PATH,
-            scopes: ["https://www.googleapis.com/auth/drive.file"],
-        });
-        const authClient = await auth.getClient();
-        return google.drive({ version: "v3", auth: authClient });
-    } catch (error) {
-        console.error("Error saat inisialisasi layanan Google Drive:", error.message);
-        console.error("Detail:", error);
-        console.error("Pastikan service account key Anda valid dan memiliki izin Drive API.");
-        return null;
-    }
-}
 
 
 exports.updateHargaHero = async (req, res) => {
@@ -159,27 +127,8 @@ exports.createHero = async (req, res) => {
             return res.status(409).json({ message: "Hero dengan nama tersebut sudah ada" });
         }
 
-        let heroImageUrl = null;
-        if (req.file) {
-            const imageBuffer = req.file.buffer;
-            const originalFileName = req.file.originalname;
-            const mimeType = req.file.mimetype;
-
-            const safeName = name.trim().replace(/[^a-zA-Z0-9_.-]/g, '_');
-            const timestamp = Date.now();
-            const uniqueFileName = `hero_${safeName}_${timestamp}_${originalFileName}`;
-
-            const driveImageDetails = await uploadImageToDrive(
-                imageBuffer,
-                uniqueFileName,
-                mimeType,
-                HERO_DRIVE_FOLDER_ID
-            );
-
-            if (driveImageDetails && driveImageDetails.webViewLink) {
-                heroImageUrl = driveImageDetails.webViewLink;
-            }
-        }
+        const fileExt = path.extname(image_hero.originalname).toLowerCase();
+        const newPath = `uploads/heroes/heroes-${name}${fileExt}`;
 
         const newHero = new Hero({
             name: name.trim(),
@@ -187,7 +136,7 @@ exports.createHero = async (req, res) => {
             battle_point_price: parsedBattlePointPrice,
             role1,
             role2,
-            image_hero: heroImageUrl
+            image_hero: newPath
         });
 
         const savedHero = await newHero.save();
@@ -261,27 +210,6 @@ exports.updateHero = async (req, res) => {
         }
         if (role1) updateFields.role1 = role1;
         if (role2) updateFields.role2 = role2;
-
-        if (req.file) {
-            const imageBuffer = req.file.buffer;
-            const originalFileName = req.file.originalname;
-            const mimeType = req.file.mimetype;
-
-            const safeName = (name || "hero").trim().replace(/[^a-zA-Z0-9_.-]/g, '_');
-            const timestamp = Date.now();
-            const uniqueFileName = `hero_${safeName}_${timestamp}_${originalFileName}`;
-
-            const driveImageDetails = await uploadImageToDrive(
-                imageBuffer,
-                uniqueFileName,
-                mimeType,
-                HERO_DRIVE_FOLDER_ID
-            );
-
-            if (driveImageDetails && driveImageDetails.webViewLink) {
-                updateFields.image_url = driveImageDetails.webViewLink;
-            }
-        }
 
         const updatedHero = await Hero.findByIdAndUpdate(
             req.params.id,

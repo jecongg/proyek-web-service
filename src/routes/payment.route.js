@@ -5,6 +5,6 @@ const authJwt = require("../middleware/authJwt");
 
 router.post('/starlight', [authJwt.verifyToken], paymentController.buyStarlight);
 router.post('/topup', [authJwt.verifyToken], paymentController.buyDiamond);
-router.post('/payment/webhook', express.json(), paymentController.midtransWebhook);
+router.post('/webhook', express.json(), paymentController.midtransWebhook);
 
 module.exports = router;
