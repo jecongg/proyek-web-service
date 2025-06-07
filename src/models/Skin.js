@@ -15,7 +15,7 @@ const skinSchema = new mongoose.Schema({
         type: Boolean,
         default: true, // Default: bisa dibeli
     },
-    image_skin: { type: String, required: true },
+    image_skin: { type: String, default: null },
 });
 
 module.exports = mongoose.model("Skin", skinSchema, "skins");
