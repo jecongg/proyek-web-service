@@ -153,37 +153,38 @@ exports.createHero = async (req, res) => {
 
 exports.getAllHeroes = async (req, res) => {
     try {
-        const hero = await Hero.findById(req.params.id);
-        if (!hero) {
-            return res.status(404).json({ message: "Hero tidak ditemukan" });
-        }
-
-        // Jika user adalah admin, hero dianggap owned
+        const heroes = await Hero.find();
+        
         if (req.user.role === "Admin") {
+            const heroesWithOwnedStatus = heroes.map(hero => ({
+                ...hero.toObject(),
+                is_owned: true
+            }));
             return res.json({
-                message: "Success fetch hero!",
-                hero: {
-                    ...hero.toObject(),
-                    is_owned: true
-                }
+                message: "Success fetch heroes!",
+                count_skin: heroesWithOwnedStatus.length,
+                skins: heroesWithOwnedStatus
             });
         }
-
-        // Jika user adalah player, cek apakah hero dimiliki
+        
         const user = await User.findById(req.user.id).populate('owned_heroes');
-        const isOwned = user.owned_heroes.some(ownedHero => 
-            ownedHero._id.toString() === hero._id.toString()
-        );
+        if (!user) {
+            return res.status(404).json({ message: "User tidak ditemukan" });
+        }
+        const ownedHeroIds = user.owned_heroes.map(hero=> hero._id.toString());
+
+        const heroesWithOwnedStatus = heroes.map(hero => ({
+            ...hero.toObject(),
+            is_owned: ownedHeroIds.includes(hero._id.toString())
+        }));
 
         res.json({
-            message: "Success fetch hero!",
-            hero: {
-                ...hero.toObject(),
-                is_owned: isOwned
-            }
+            message: "Success fetch heroes!",
+            count_skin: heroesWithOwnedStatus.length,
+            skins: heroesWithOwnedStatus
         });
     } catch (error) {
-        console.error("Error getHeroById:", error);
+        console.error("Error getAllSkins:", error);
         res.status(500).json({ message: "Internal Server Error" });
     }
 };
