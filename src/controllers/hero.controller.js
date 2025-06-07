@@ -104,7 +104,7 @@ exports.createHero = async (req, res) => {
         });
     }
     
-    if(!image_hero) {
+    if(!image_hero && !req.file) {
         return res.status(400).json({
             message: "Field image_hero wajib diisi",
         });

@@ -25,8 +25,9 @@ const diskStorageHero = multer.diskStorage({
         cb(null, uploadDir);
     },
     filename: function (req, file, cb) {
-        const username = req.body.username || 'default';
-        cb(null, `heroes-${username}${path.extname(file.originalname)}`);
+        const heroName = req.body.name || `hero-${Date.now()}`;
+        const sanitizedName = heroName.trim().replace(/\s+/g, '-');
+        cb(null, `heroes-${sanitizedName}${path.extname(file.originalname)}`);
     }
 });
 
@@ -40,8 +41,9 @@ const diskStorageSkin = multer.diskStorage({
         cb(null, uploadDir);
     },
     filename: function (req, file, cb) {
-        const username = req.body.username || 'default';
-        cb(null, `skins-${username}${path.extname(file.originalname)}`);
+        const skinName = req.body.name || `skin-${Date.now()}`;
+        const sanitizedName = skinName.trim().replace(/\s+/g, '-');
+        cb(null, `skins-${sanitizedName}${path.extname(file.originalname)}`);
     }
 });
 

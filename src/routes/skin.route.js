@@ -8,7 +8,7 @@ router.get("/", [authJwt.verifyToken], skinController.getAllSkins);
 
 router.put("/:id_skin", [authJwt.verifyToken, authJwt.isAdmin], skinController.updateHargaSkin);
 
-router.post("/hero/:id_hero", [authJwt.verifyToken, authJwt.isAdmin, uploadSkinImage, handleMulterError], skinController.createSkinForHero);
+router.post("/:id_hero", [authJwt.verifyToken, authJwt.isAdmin, uploadSkinImage, handleMulterError], skinController.createSkinForHero);
 
 
 module.exports = router;
