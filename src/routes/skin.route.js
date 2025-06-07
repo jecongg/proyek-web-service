@@ -10,8 +10,5 @@ router.put("/:id_skin", [authJwt.verifyToken, authJwt.isAdmin], skinController.u
 
 router.post("/hero/:id_hero", [authJwt.verifyToken, authJwt.isAdmin, uploadSkinImage, handleMulterError], skinController.createSkinForHero);
 
-router.get("/:id", [authJwt.verifyToken], skinController.getSkinById);
-
-router.delete("/:id", [authJwt.verifyToken, authJwt.isAdmin], skinController.deleteSkin);
 
 module.exports = router;

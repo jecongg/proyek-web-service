@@ -151,7 +151,7 @@ exports.createHero = async (req, res) => {
     }
 };
 
-exports.getHeroById = async (req, res) => {
+exports.getAllHeroes = async (req, res) => {
     try {
         const hero = await Hero.findById(req.params.id);
         if (!hero) {

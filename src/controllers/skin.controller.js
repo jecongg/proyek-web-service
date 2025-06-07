@@ -5,38 +5,38 @@ const path = require("path");
 
 exports.getAllSkins = async (req, res) => {
     try {
-        const token = req.headers["x-auth-token"];
-
-        let skins = await Skin.find().populate("id_hero", "name"); // populate hero name jika perlu
-
-        if (token) {
-            // Verifikasi token
-            const decoded = jwt.verify(token, process.env.JWT_SECRET || "secret_key");
-            const userId = decoded.id;
-
-            // Cari user dan ambil owned_skins
-            const user = await User.findById(userId).select("owned_skins");
-
-            if (!user) {
-                return res.status(404).json({ message: "User not found" });
-            }
-
-            // Ubah owned_skins jadi Set untuk pengecekan cepat
-            const ownedSkinIds = new Set(user.owned_skins.map(id => id.toString()));
-
-            // Tambahkan properti "owned" ke masing-masing skin
-            skins = skins.map(skin => {
-                const isOwned = ownedSkinIds.has(skin._id.toString());
-                return {
-                    ...skin._doc,
-                    owned: isOwned,
-                };
+        const skins = await Skin.find().populate('id_hero');
+        
+        if (req.user.role === "Admin") {
+            const skinsWithOwnedStatus = skins.map(skin => ({
+                ...skin.toObject(),
+                is_owned: true
+            }));
+            return res.json({
+                message: "Success fetch skins!",
+                count_skin: skinsWithOwnedStatus.length,
+                skins: skinsWithOwnedStatus
             });
         }
+        
+        const user = await User.findById(req.user.id).populate('owned_skins');
+        if (!user) {
+            return res.status(404).json({ message: "User tidak ditemukan" });
+        }
+        const ownedSkinIds = user.owned_skins.map(skin => skin._id.toString());
 
-        res.json(skins);
+        const skinsWithOwnedStatus = skins.map(skin => ({
+            ...skin.toObject(),
+            is_owned: ownedSkinIds.includes(skin._id.toString())
+        }));
+
+        res.json({
+            message: "Success fetch skins!",
+            count_skin: skinsWithOwnedStatus.length,
+            skins: skinsWithOwnedStatus
+        });
     } catch (error) {
-        console.error("Error fetching skins:", error);
+        console.error("Error getAllSkins:", error);
         res.status(500).json({ message: "Internal Server Error" });
     }
 };
