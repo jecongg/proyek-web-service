@@ -4,8 +4,9 @@ const heroController = require("../controllers/hero.controller");
 const authJwt = require("../middleware/authJwt");
 const { uploadHeroImage, handleMulterError } = require("../middleware/upload");
 
-// Get all heroes
-router.get("/", [authJwt.verifyToken], heroController.getAllHeroes);
+router.put("/:id_hero", heroController.updateHargaHero);
+router.post("/", [authJwt.verifyToken, authJwt.isAdmin], heroController.createHero);
+router.get("/", heroController.getAllHeroes);
 
 // Create new hero (Admin only)
 router.post("/", [authJwt.verifyToken, authJwt.isAdmin, uploadHeroImage, handleMulterError], heroController.createHero);
