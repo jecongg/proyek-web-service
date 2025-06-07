@@ -14,9 +14,38 @@ const storage = multer.diskStorage({
     }
 });
 
-// Filter file
-const fileFilter = (req, file, cb) => {
-    // Hanya terima file JPEG, JPG, dan PNG
+const diskStorageHero = multer.diskStorage({
+    destination: function (req, file, cb) {
+        const uploadDir = 'uploads/heroes/';
+        // Buat direktori jika belum ada
+        if (!fs.existsSync(uploadDir)) {
+            fs.mkdirSync(uploadDir, { recursive: true });
+        }
+        cb(null, uploadDir);
+    },
+    filename: function (req, file, cb) {
+        const username = req.body.username || 'default';
+        cb(null, `heroes-${username}${path.extname(file.originalname)}`);
+    }
+});
+
+const diskStorageSkin = multer.diskStorage({
+    destination: function (req, file, cb) {
+        const uploadDir = 'uploads/skins/';
+        // Buat direktori jika belum ada
+        if (!fs.existsSync(uploadDir)) {
+            fs.mkdirSync(uploadDir, { recursive: true });
+        }
+        cb(null, uploadDir);
+    },
+    filename: function (req, file, cb) {
+        const username = req.body.username || 'default';
+        cb(null, `skins-${username}${path.extname(file.originalname)}`);
+    }
+});
+
+// Filter file untuk gambar
+const imageFilter = (req, file, cb) => {
     const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png'];
     
     if (allowedMimeTypes.includes(file.mimetype)) {
@@ -36,6 +65,24 @@ const upload = multer({
     }
 }).single('profile_picture');
 
+const uploadHeroImage = multer({
+    storage: diskStorageHero,
+    fileFilter: imageFilter,
+    limits: {
+        fileSize: 5 * 1024 * 1024, // 5MB
+        files: 1 // Hanya 1 file
+    }
+}).single('image_hero');
+
+const uploadSkinImage = multer({
+    storage: diskStorageSkin,
+    fileFilter: imageFilter,
+    limits: {
+        fileSize: 5 * 1024 * 1024, // 5MB
+        files: 1 // Hanya 1 file
+    }
+}).single('image_skin');
+
 // Middleware untuk menangani error multer
 const handleMulterError = (err, req, res, next) => {
     if (err instanceof multer.MulterError) {
@@ -50,4 +97,10 @@ const handleMulterError = (err, req, res, next) => {
     next(err);
 };
 
-module.exports = { upload, handleMulterError }; 
+module.exports = {
+    uploadImage,
+    uploadProfilePicture,
+    handleMulterError,
+    uploadHeroImage,
+    uploadSkinImage
+};

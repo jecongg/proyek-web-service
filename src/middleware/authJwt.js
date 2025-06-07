@@ -24,9 +24,9 @@ exports.isAdmin = (req, res, next) => {
     next();
 };
 
-exports.isUser = (req, res, next) => {
-    if (req.user.role !== "User") {
-        return res.status(403).json({ message: "Forbidden: User only" });
+exports.isPlayer = (req, res, next) => {
+    if (req.user.role !== "Player") {
+        return res.status(403).json({ message: "Forbidden: Player only" });
     }
     next();
 };

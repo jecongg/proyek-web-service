@@ -176,7 +176,7 @@ exports.updateProfile = async (req, res) => {
         const { username, region } = req.body;
         const profilePicture = req.file;
 
-        // Cek apakah user mencoba mengupdate profile mereka sendiri
+        // Cek apakah user mencoba mengupdate profile user lain
         if (req.user.id.toString() != id) {
             return res.status(403).json({ 
                 message: "Anda tidak memiliki akses untuk mengupdate profile user lain" 
@@ -207,6 +207,11 @@ exports.updateProfile = async (req, res) => {
                 }
                 // Kurangi diamond
                 currentUser.diamond -= 239;
+            }
+            else{
+                return res.status(400).json({
+                    message: "Username tidak berubah, tidak perlu update"
+                });
             }
         }
 
@@ -242,6 +247,11 @@ exports.updateProfile = async (req, res) => {
                 // Kurangi diamond dan update waktu terakhir
                 currentUser.diamond -= 300;
                 currentUser.last_region_update = new Date();
+            }
+            else{
+                return res.status(400).json({
+                    message: "Region tidak berubah, tidak perlu update"
+                });
             }
         }
 

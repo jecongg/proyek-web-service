@@ -22,6 +22,7 @@
   },
   "homepage": "https://github.com/jecongg/proyek-web-service#readme",
   "dependencies": {
+    "@ngrok/ngrok": "^1.5.1",
     "axios": "^1.9.0",
     "bcrypt": "^6.0.0",
     "crypto": "^1.0.1",

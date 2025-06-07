@@ -30,6 +30,20 @@ exports.addToCart = async (req, res) => {
             return res.status(404).json({ message: "User tidak ditemukan" });
         }
 
+        const havedOwnedHero = user.owned_heroes.some(
+            (heroId) => heroId.toString() === itemId
+        );
+
+        const havedOwnedSkin = user.owned_skins.some(
+            (skinId) => skinId.toString() === itemId
+        );
+
+        if(havedOwnedHero || havedOwnedSkin) {
+            return res.status(400).json({
+                message: "Item sudah dimiliki, tidak perlu ditambahkan ke cart",
+            });
+        }
+
         // Cek apakah item sudah ada di cart
         const alreadyInCart = user.cart.some(
             (item) => item.item_id.toString() === itemId
@@ -368,6 +382,12 @@ exports.checkoutAllItems = async (req, res) => {
             }
         }
 
+        if (paymentMethod === "battle_point" && skinIds.length > 0) {
+            return res.status(400).json({
+                message: "Pembayaran dengan Battle Point tidak bisa digunakan karena terdapat Skin di Cart. Harap gunakan Diamond atau keluarkan Skin dari Cart.",
+            });
+        }
+
         // Ambil detail hero dan skin
         const [heroes, skins] = await Promise.all([
             Hero.find({ _id: { $in: heroIds } }),
@@ -387,23 +407,23 @@ exports.checkoutAllItems = async (req, res) => {
 
         // Hitung total harga
         let totalPrice = 0;
+        const purchasedItems = [...heroes, ...skins]; // Gabungkan semua item yang akan dibeli
 
-        for (const item of user.cart) {
-            const idStr = item.item_id.toString();
-
+        for (const item of purchasedItems) {
             let price = 0;
-            if (item.item_type === "Hero") {
-                price = heroMap[idStr]?.diamond_price || 0;
-            } else if (item.item_type === "Skin") {
-                price = skinMap[idStr]?.diamond_price || 0;
+            if (paymentMethod === "diamond") {
+                // Semua item punya harga diamond
+                price = item.diamond_price || 0;
+            } else if (paymentMethod === "battle_point") {
+                // Hanya hero yang punya harga battle point
+                if (item.constructor.modelName === "Hero") {
+                    price = item.battle_point_price || 0;
+                }
             }
-
+            
             if (price <= 0) {
-                return res.status(400).json({
-                    message: `Item dengan ID ${item.item_id} tidak memiliki harga yang valid`,
-                });
+                return res.status(400).json({ message: `Item '${item.name}' tidak memiliki harga yang valid untuk metode pembayaran ini` });
             }
-
             totalPrice += price;
         }
 
@@ -478,6 +498,12 @@ exports.checkoutAllItems = async (req, res) => {
 
         res.json({
             message: `Berhasil membeli ${user.cart.length} item dengan ${paymentMethod}`,
+            items: purchasedItems.map((item) => ({
+                name: item.name,
+                type: item.constructor.modelName,
+                price: paymentMethod === "diamond" ? item.diamond_price : item.battle_point_price,
+            })),
+            total_price: totalPrice,
             user: {
                 diamond: updatedUser.diamond,
                 battle_point: updatedUser.battle_point,
