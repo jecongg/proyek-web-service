@@ -129,7 +129,6 @@ exports.createHero = async (req, res) => {
 
         const fileExt = path.extname(image_hero.originalname).toLowerCase();
         const newPath = `uploads/heroes/heroes-${name}${fileExt}`;
-        console.log("New hero image path:", newPath);
 
         const newHero = new Hero({
             name: name.trim(),

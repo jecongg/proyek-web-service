@@ -569,10 +569,25 @@ exports.softDeleteUser = async (req, res) => {
       return res.status(400).json({ message: "User sudah dihapus sebelumnya." });
     }
 
-    user.isDeleted = true;
-    user.deletedAt = new Date();
-    await user.save();
-
+    if(req.user.role === "Player") {
+        if(req.user.id.toString() !== id) {
+            return res.status(403).json({ message: "Anda tidak memiliki akses untuk menghapus user ini." });
+        }
+        else{
+            user.isDeleted = true;
+            user.deletedAt = new Date();
+            await user.save();
+        }
+    }
+    else if(req.user.role === "Admin") {
+        user.isDeleted = true;
+        user.deletedAt = new Date();
+        await user.save();
+    }
+    else {
+        return res.status(403).json({ message: "Hanya admin atau user itu sendiri yang dapat menghapus akun." });
+    }
+    
     res.json({
       message: "User berhasil di-soft delete.",
       user: {
