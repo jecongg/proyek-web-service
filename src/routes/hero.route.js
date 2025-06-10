@@ -10,6 +10,4 @@ router.post("/", [authJwt.verifyToken, authJwt.isAdmin, uploadHeroImage, handleM
 // Update hero (Admin only)
 router.put("/:id_hero", [authJwt.verifyToken, authJwt.isAdmin], heroController.updateHargaHero);
 
-
-
 module.exports = router;

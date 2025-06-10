@@ -56,84 +56,126 @@ exports.buyStarlight = async (req, res) => {
 
 exports.midtransWebhook = async (req, res) => {
     try {
-        // Verifikasi signature
+        // Verifikasi signature tetap penting
         if (!isSignatureValid(req.body)) {
             console.warn('❌ Invalid signature key from Midtrans');
             return res.status(403).send('Forbidden: Invalid signature');
         }
 
-        const { order_id, transaction_status, payment_type } = req.body;
+        const { order_id, transaction_status, payment_type, transaction_id } = req.body;
+        
+        console.log(`✅ Webhook received for order_id: ${order_id}, status: ${transaction_status}`);
 
-        console.log("✅ Webhook received:", req.body);
-
-        if (transaction_status === "settlement") {
+        // SOLUSI: Terima 'capture' ATAU 'settlement' sebagai status berhasil
+        if (transaction_status === "capture" || transaction_status === "settlement") {
             const payment = await PaymentHistory.findOneAndUpdate(
                 { order_id },
                 {
-                    status: "paid",
+                    status: "paid", // Ubah status internal Anda menjadi 'paid'
                     payment_method: payment_type,
                     updatedAt: new Date(),
                 },
-                { new: true }
+                { new: true } // { new: true } mengembalikan dokumen yang sudah diperbarui
             );
-
-            if (payment && payment.type === "starlight") {
-                await User.findByIdAndUpdate(payment.user_id, {
-                    starlight: true,
-                    updatedAt: new Date(),
-                });
+            
+            // Jika pembayaran tidak ditemukan atau sudah diproses, hentikan
+            if (!payment) {
+                 console.warn(`⚠️ Payment with order_id: ${order_id} not found.`);
+                 return res.status(404).send("Payment not found");
             }
 
-            return res.status(200).send("OK");
+            // Lakukan pembaruan berdasarkan tipe pembayaran
+            if (payment.type === "starlight") {
+                await User.findByIdAndUpdate(payment.user_id, {
+                    starlight: true,
+                });
+                console.log(`🌟 Starlight purchased for user: ${payment.user_id}`);
+            } else if (payment.type === "topup") {
+                await User.findByIdAndUpdate(payment.user_id, {
+                    $inc: { diamond: payment.details.diamond_amount },
+                });
+                console.log(`💎 ${payment.details.diamond_amount} diamonds added for user: ${payment.user_id}`);
+            }
+
+            return res.status(200).send("OK: Transaction success processed.");
         }
 
-        res.status(200).send("Ignored: not settled");
+        // Abaikan status lain yang tidak relevan (pending, deny, expire, dll)
+        res.status(200).send("OK: Ignored, status not capture or settlement.");
+
     } catch (err) {
         console.error("Webhook error:", err);
         res.status(500).send("Internal Server Error");
     }
 };
+
 exports.buyDiamond = async (req, res) => {
     try {
-        const userId = req.user.id;
-        const { diamonds, amount } = req.body;
+        // Tentukan kurs konversi (harga per diamond dalam Rupiah).
+        // Ini bisa disimpan di environment variable atau database agar lebih mudah diubah.
+        const RUPIAH_PER_DIAMOND = 290;
+        const MINIMUM_DIAMOND_TOPUP = 10; // Tetapkan batas minimum top-up
 
-        if (!diamonds || !amount || amount <= 0) {
-            return res.status(400).json({ message: "Invalid diamonds or amount" });
+        // 1. Ambil jumlah diamond dari request body
+        const { diamond_amount } = req.body;
+        const userId = req.user.id;
+
+        // 2. Validasi input
+        if (diamond_amount === undefined) {
+            return res.status(400).json({ message: "Parameter 'diamond_amount' diperlukan." });
         }
 
+        const diamondAmountAsNumber = parseInt(diamond_amount, 10);
+
+        if (isNaN(diamondAmountAsNumber) || diamondAmountAsNumber <= 0) {
+            return res.status(400).json({ message: "Jumlah diamond harus berupa angka positif." });
+        }
+
+        if (diamondAmountAsNumber < MINIMUM_DIAMOND_TOPUP) {
+            return res.status(400).json({ message: `Jumlah top-up minimum adalah ${MINIMUM_DIAMOND_TOPUP} diamond.` });
+        }
+        
+        // 3. Kalkulasi harga total dalam Rupiah
+        const priceInRupiah = diamondAmountAsNumber * RUPIAH_PER_DIAMOND;
+        
+        // 4. Dapatkan data user
         const user = await User.findById(userId);
         if (!user) {
-            return res.status(404).json({ message: "User not found" });
+            return res.status(404).json({ message: "User tidak ditemukan." });
         }
-
+        
+        // 5. Siapkan detail transaksi
         const orderId = `diamond-${userId}-${Date.now()}`;
-
         const customer = {
             email: user.email,
         };
 
-        const transaction = await createTransaction(orderId, amount, customer);
+        // 6. Buat transaksi Midtrans dengan harga yang sudah dihitung
+        const transaction = await createTransaction(orderId, priceInRupiah, customer);
 
+        // 7. Simpan riwayat pembayaran dengan status pending
         await PaymentHistory.create({
             user_id: userId,
             order_id: orderId,
-            total: amount,
-            payment_method: null,
+            total: priceInRupiah, // Total harga dalam Rupiah
             type: "topup",
-            diamond_amount: diamonds,
+            details: {
+                diamond_amount: diamondAmountAsNumber, // Jumlah diamond yang dibeli
+            },
             status: "pending",
         });
 
+        // 8. Kirim token dan URL redirect ke client
         res.status(200).json({
             token: transaction.token,
             redirect_url: transaction.redirect_url,
         });
+
     } catch (err) {
         console.error("Diamond top-up error:", err);
         res.status(500).json({
-            message: "Failed to initiate diamond top-up",
-            err,
+            message: "Gagal memulai top-up diamond",
+            error: err.message,
         });
     }
 };
