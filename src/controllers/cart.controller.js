@@ -9,7 +9,7 @@ exports.addToCart = async (req, res) => {
     // Validasi field
     if (!itemId) {
         return res.status(400).json({
-            message: "Field itemId harus disertakan",
+            message: "itemId is required!",
         });
     }
 
@@ -17,7 +17,7 @@ exports.addToCart = async (req, res) => {
     if (!mongoose.Types.ObjectId.isValid(itemId)) {
         return res.status(400).json({
             message:
-                "Format itemId tidak valid. Harus berupa ObjectId MongoDB (24 karakter hex string)",
+                "itemID format is invalid. Must be a MongoDB ObjectId (24 character hex string)",
         });
     }
 
@@ -27,7 +27,7 @@ exports.addToCart = async (req, res) => {
         // Cari user
         const user = await User.findById(userId);
         if (!user) {
-            return res.status(404).json({ message: "User tidak ditemukan" });
+            return res.status(404).json({ message: "User not found!" });
         }
 
         const havedOwnedHero = user.owned_heroes.some(
@@ -40,7 +40,7 @@ exports.addToCart = async (req, res) => {
 
         if(havedOwnedHero || havedOwnedSkin) {
             return res.status(400).json({
-                message: "Item sudah dimiliki, tidak perlu ditambahkan ke cart",
+                message: "You already own this item, cannot add to cart",
             });
         }
 
@@ -51,7 +51,7 @@ exports.addToCart = async (req, res) => {
 
         if (alreadyInCart) {
             return res.status(400).json({
-                message: "Item sudah ada di cart",
+                message: "Item is already in your cart",
             });
         }
 
@@ -68,8 +68,15 @@ exports.addToCart = async (req, res) => {
             // Jika tidak ketemu di Hero, coba cari di Skin
             item = await Skin.findById(itemId);
             if (item) {
-                itemType = "Skin";
-                itemName = item.name;
+                if(item.skin_type === "Starlight") {
+                    return res.status(400).json({
+                        message: "Starlight skins cannot be added to cart, please purchase starlight membership to get this skin",
+                    });
+                }
+                else{
+                    itemType = "Skin";
+                    itemName = item.name;
+                }
             }
         }
 
@@ -77,7 +84,7 @@ exports.addToCart = async (req, res) => {
         if (!item) {
             return res.status(404).json({
                 message:
-                    "Item dengan ID tersebut tidak ditemukan di Hero maupun Skin",
+                    "Item with the given itemId not found in both Hero and Skin collections",
             });
         }
 
@@ -97,7 +104,7 @@ exports.addToCart = async (req, res) => {
 
         // Kirim respons hanya dengan pesan lengkap
         res.json({
-            message: `${itemType} ${itemName} berhasil ditambahkan ke cart`,
+            message: `${itemType} ${itemName} successfully added to cart`,
         });
     } catch (error) {
         console.error("Error adding to cart:", error);
@@ -113,7 +120,7 @@ exports.getCart = async (req, res) => {
         const user = await User.findById(userId).select("cart");
 
         if (!user) {
-            return res.status(404).json({ message: "User tidak ditemukan" });
+            return res.status(404).json({ message: "User not found!" });
         }
 
         // Pisahkan item berdasarkan tipe
@@ -184,7 +191,7 @@ exports.getCart = async (req, res) => {
         });
 
         res.json({
-            message: "Berhasil mengambil cart",
+            message: "Successfully fetched cart",
             cart: cartWithDetails,
         });
     } catch (error) {
@@ -199,7 +206,7 @@ exports.removeFromCart = async (req, res) => {
     // Validasi field
     if (!itemId) {
         return res.status(400).json({
-            message: "Field itemId harus disertakan",
+            message: "itemId is required!",
         });
     }
 
@@ -207,7 +214,7 @@ exports.removeFromCart = async (req, res) => {
     if (!mongoose.Types.ObjectId.isValid(itemId)) {
         return res.status(400).json({
             message:
-                "Format itemId tidak valid. Harus berupa ObjectId MongoDB (24 karakter hex string)",
+                "itemID format is invalid. Must be a MongoDB ObjectId (24 character hex string)",
         });
     }
 
@@ -217,7 +224,7 @@ exports.removeFromCart = async (req, res) => {
         // Cari user
         const user = await User.findById(userId);
         if (!user) {
-            return res.status(404).json({ message: "User tidak ditemukan" });
+            return res.status(404).json({ message: "User not found!" });
         }
 
         // Cari item di cart
@@ -227,7 +234,7 @@ exports.removeFromCart = async (req, res) => {
 
         if (!cartItem) {
             return res.status(404).json({
-                message: "Item tidak ditemukan di cart",
+                message: "Item not found in cart!",
             });
         }
 
@@ -327,7 +334,7 @@ exports.removeFromCart = async (req, res) => {
 
         // Kirim respons dengan pesan + cart terbaru
         res.json({
-            message: `${itemType} ${itemName} berhasil dihapus dari cart`,
+            message: `${itemType} ${itemName} successfully removed from cart`,
             cart: cartWithDetails,
         });
     } catch (error) {
@@ -343,7 +350,7 @@ exports.checkoutAllItems = async (req, res) => {
     // Validasi input
     if (!paymentMethod) {
         return res.status(400).json({
-            message: "Field paymentMethod harus disertakan",
+            message: "paymentMethod is required!",
         });
     }
 
@@ -352,7 +359,8 @@ exports.checkoutAllItems = async (req, res) => {
     if (!validPaymentMethods.includes(paymentMethod)) {
         return res.status(400).json({
             message:
-                "Metode pembayaran tidak valid, harus 'diamond' atau 'battle_point'",
+                "Payment method must be one of: " +
+                validPaymentMethods.join(", "),
         });
     }
 
@@ -360,13 +368,13 @@ exports.checkoutAllItems = async (req, res) => {
         const user = await User.findById(userId);
 
         if (!user) {
-            return res.status(404).json({ message: "User tidak ditemukan" });
+            return res.status(404).json({ message: "User not found!" });
         }
 
         // Pastikan cart tidak kosong
         if (!user.cart || user.cart.length === 0) {
             return res.status(400).json({
-                message: "Cart kosong, tidak ada item untuk dibeli",
+                message: "Cart is empty! Please add items to the cart before checking out.",
             });
         }
 
@@ -384,7 +392,7 @@ exports.checkoutAllItems = async (req, res) => {
 
         if (paymentMethod === "battle_point" && skinIds.length > 0) {
             return res.status(400).json({
-                message: "Pembayaran dengan Battle Point tidak bisa digunakan karena terdapat Skin di Cart. Harap gunakan Diamond atau keluarkan Skin dari Cart.",
+                message: "Payment method 'battle_point' cannot be used for skins. Please use 'diamond' for skins.",
             });
         }
 
@@ -422,7 +430,7 @@ exports.checkoutAllItems = async (req, res) => {
             }
             
             if (price <= 0) {
-                return res.status(400).json({ message: `Item '${item.name}' tidak memiliki harga yang valid untuk metode pembayaran ini` });
+                return res.status(400).json({ message: `Item '${item.name}' doesn't have valid price for this payment method` });
             }
             totalPrice += price;
         }
@@ -430,7 +438,7 @@ exports.checkoutAllItems = async (req, res) => {
         // Cek apakah saldo mencukupi
         if (paymentMethod === "diamond" && user.diamond < totalPrice) {
             return res.status(400).json({
-                message: "Diamond tidak cukup untuk membeli semua item",
+                message: "Diamond insufficient to purchase all items",
             });
         }
 
@@ -439,7 +447,7 @@ exports.checkoutAllItems = async (req, res) => {
             user.battle_point < totalPrice
         ) {
             return res.status(400).json({
-                message: "Battle Point tidak cukup untuk membeli semua item",
+                message: "Battle Point insufficient to purchase all items",
             });
         }
 
@@ -497,7 +505,7 @@ exports.checkoutAllItems = async (req, res) => {
         );
 
         res.json({
-            message: `Berhasil membeli ${user.cart.length} item dengan ${paymentMethod}`,
+            message: `Successfully buy ${user.cart.length} item using ${paymentMethod}`,
             items: purchasedItems.map((item) => ({
                 name: item.name,
                 type: item.constructor.modelName,

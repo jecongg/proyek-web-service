@@ -23,7 +23,7 @@ exports.updateHargaHero = async (req, res) => {
             typeof parsedBattlePointPrice === "undefined"
         ) {
             return res.status(400).json({
-                message: "Minimal satu field harus diisi: diamond_price atau battle_point_price",
+                message: "One of diamond_price or battle_point_price must be provided",
             });
         }
 
@@ -31,7 +31,7 @@ exports.updateHargaHero = async (req, res) => {
         if (typeof parsedDiamondPrice !== "undefined") {
             if (isNaN(parsedDiamondPrice) || parsedDiamondPrice < 0) {
                 return res.status(400).json({
-                    message: "diamond_price harus berupa angka positif",
+                    message: "Diamond price must be a positive number",
                 });
             }
         }
@@ -40,7 +40,7 @@ exports.updateHargaHero = async (req, res) => {
         if (typeof parsedBattlePointPrice !== "undefined") {
             if (isNaN(parsedBattlePointPrice) || parsedBattlePointPrice < 0) {
                 return res.status(400).json({
-                    message: "battle_point_price harus berupa angka positif",
+                    message: "Battle point price must be a positive number",
                 });
             }
         }
@@ -62,11 +62,11 @@ exports.updateHargaHero = async (req, res) => {
         );
 
         if (!updatedHero) {
-            return res.status(404).json({ message: "Hero tidak ditemukan" });
+            return res.status(404).json({ message: "Hero not found!" });
         }
 
         res.json({
-            message: "Harga hero berhasil diupdate",
+            message: "Hero price updated successfully",
             hero: updatedHero,
         });
 
@@ -82,31 +82,31 @@ exports.createHero = async (req, res) => {
 
     if(!name || name.trim() === "") {
         return res.status(400).json({
-            message: "Field name wajib diisi",
+            message: "Name must be provided and cannot be empty!",
         });
     }
 
     if(!diamond_price || isNaN(diamond_price)) {
         return res.status(400).json({
-            message: "Field diamond_price wajib diisi dan harus berupa angka",
+            message: "Diamond price must be provided and must be a number",
         });
     }
 
     if(!battle_point_price || isNaN(battle_point_price)) {
         return res.status(400).json({
-            message: "Field battle_point_price wajib diisi dan harus berupa angka",
+            message: "Battle point price must be provided and must be a number",
         });
     }
 
     if(!role1 && !role2) {
         return res.status(400).json({
-            message: "Field role1 dan role2 wajib diisi",
+            message: "Role1 or Role2 must be provided",
         });
     }
     
     if(!image_hero) {
         return res.status(400).json({
-            message: "Field image_hero wajib diisi",
+            message: "image_hero must be provided",
         });
     }
 
@@ -114,17 +114,17 @@ exports.createHero = async (req, res) => {
     const parsedBattlePointPrice = parseFloat(battle_point_price);
 
     if (isNaN(parsedDiamondPrice) || parsedDiamondPrice < 0) {
-        return res.status(400).json({ message: "diamond_price harus berupa angka positif" });
+        return res.status(400).json({ message: "Diamond price must be a positive number" });
     }
 
     if (isNaN(parsedBattlePointPrice) || parsedBattlePointPrice < 0) {
-        return res.status(400).json({ message: "battle_point_price harus berupa angka positif" });
+        return res.status(400).json({ message: "Battle point price must be a positive number" });
     }
 
     try {
         const existingHero = await Hero.findOne({ name: name.trim() });
         if (existingHero) {
-            return res.status(409).json({ message: "Hero dengan nama tersebut sudah ada" });
+            return res.status(409).json({ message: "Hero's name has already existed" });
         }
 
         const fileExt = path.extname(image_hero.originalname).toLowerCase();
@@ -142,8 +142,15 @@ exports.createHero = async (req, res) => {
         const savedHero = await newHero.save();
 
         res.status(201).json({
-            message: "Hero berhasil ditambahkan ke shop",
-            hero: savedHero,
+            message: "Successfully created hero",
+            hero: {
+                name: savedHero.name,
+                diamond_price: savedHero.diamond_price,
+                battle_point_price: savedHero.battle_point_price,
+                role1: savedHero.role1,
+                role2: savedHero.role2,
+                image_hero: savedHero.image_hero
+            }
         });
     } catch (error) {
         console.error("Error creating hero:", error);
@@ -161,7 +168,7 @@ exports.getAllHeroes = async (req, res) => {
                 is_owned: true
             }));
             return res.json({
-                message: "Success fetch heroes!",
+                message: "Successfully fetched heroes!",
                 count_skin: heroesWithOwnedStatus.length,
                 skins: heroesWithOwnedStatus
             });
@@ -169,7 +176,7 @@ exports.getAllHeroes = async (req, res) => {
         
         const user = await User.findById(req.user.id).populate('owned_heroes');
         if (!user) {
-            return res.status(404).json({ message: "User tidak ditemukan" });
+            return res.status(404).json({ message: "User not found" });
         }
         const ownedHeroIds = user.owned_heroes.map(hero=> hero._id.toString());
 
@@ -179,7 +186,7 @@ exports.getAllHeroes = async (req, res) => {
         }));
 
         res.json({
-            message: "Success fetch heroes!",
+            message: "Successfully fetched heroes!",
             count_skin: heroesWithOwnedStatus.length,
             skins: heroesWithOwnedStatus
         });
@@ -198,14 +205,14 @@ exports.updateHero = async (req, res) => {
         if (diamond_price !== undefined) {
             const parsedDiamondPrice = parseFloat(diamond_price);
             if (isNaN(parsedDiamondPrice) || parsedDiamondPrice < 0) {
-                return res.status(400).json({ message: "diamond_price harus berupa angka positif" });
+                return res.status(400).json({ message: "Diamond price must be a positive number" });
             }
             updateFields.diamond_price = parsedDiamondPrice;
         }
         if (battle_point_price !== undefined) {
             const parsedBattlePointPrice = parseFloat(battle_point_price);
             if (isNaN(parsedBattlePointPrice) || parsedBattlePointPrice < 0) {
-                return res.status(400).json({ message: "battle_point_price harus berupa angka positif" });
+                return res.status(400).json({ message: "Battle point price must be a positive number" });
             }
             updateFields.battle_point_price = parsedBattlePointPrice;
         }
@@ -219,11 +226,11 @@ exports.updateHero = async (req, res) => {
         );
 
         if (!updatedHero) {
-            return res.status(404).json({ message: "Hero tidak ditemukan" });
+            return res.status(404).json({ message: "Hero not found" });
         }
 
         res.json({
-            message: "Hero berhasil diupdate",
+            message: "Successfully updated hero",
             hero: updatedHero
         });
     } catch (error) {
@@ -237,11 +244,11 @@ exports.deleteHero = async (req, res) => {
         const deletedHero = await Hero.findByIdAndDelete(req.params.id);
         
         if (!deletedHero) {
-            return res.status(404).json({ message: "Hero tidak ditemukan" });
+            return res.status(404).json({ message: "Hero not found" });
         }
 
         res.json({
-            message: "Hero berhasil dihapus",
+            message: "Successfully deleted hero",
             hero: deletedHero
         });
     } catch (error) {

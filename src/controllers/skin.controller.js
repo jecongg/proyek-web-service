@@ -13,7 +13,7 @@ exports.getAllSkins = async (req, res) => {
                 is_owned: true
             }));
             return res.json({
-                message: "Success fetch skins!",
+                message: "Successfully fetched skins!",
                 count_skin: skinsWithOwnedStatus.length,
                 skins: skinsWithOwnedStatus
             });
@@ -21,7 +21,7 @@ exports.getAllSkins = async (req, res) => {
         
         const user = await User.findById(req.user.id).populate('owned_skins');
         if (!user) {
-            return res.status(404).json({ message: "User tidak ditemukan" });
+            return res.status(404).json({ message: "User not found" });
         }
         const ownedSkinIds = user.owned_skins.map(skin => skin._id.toString());
 
@@ -31,7 +31,7 @@ exports.getAllSkins = async (req, res) => {
         }));
 
         res.json({
-            message: "Success fetch skins!",
+            message: "Successfully fetched skins!",
             count_skin: skinsWithOwnedStatus.length,
             skins: skinsWithOwnedStatus
         });
@@ -51,7 +51,7 @@ exports.updateHargaSkin = async (req, res) => {
         // Memastikan diamond_price ada di body
         if (typeof diamond_price === "undefined") {
             return res.status(400).json({
-                message: "Field diamond_price harus diisi",
+                message: "Diamond price is required!",
             });
         }
 
@@ -61,7 +61,7 @@ exports.updateHargaSkin = async (req, res) => {
         // Validasi diamond_price harus angka positif
         if (isNaN(parsedDiamondPrice) || parsedDiamondPrice < 0) {
             return res.status(400).json({
-                message: "diamond_price harus berupa angka positif",
+                message: "Diamond price must be a positive number",
             });
         }
 
@@ -79,12 +79,12 @@ exports.updateHargaSkin = async (req, res) => {
 
         // Jika skin tidak ditemukan
         if (!updatedSkin) {
-            return res.status(404).json({ message: "Skin tidak ditemukan" });
+            return res.status(404).json({ message: "Skin not found" });
         }
 
         // Jika berhasil, kirim respons sukses
         res.json({
-            message: "Harga skin berhasil diupdate",
+            message: "Skin price updated successfully",
             skin: updatedSkin,
         });
 
@@ -102,20 +102,20 @@ exports.createSkinForHero = async (req, res) => {
 
     if (!name || diamond_price === undefined) {
         return res.status(400).json({
-            message: "Field name dan diamond_price wajib diisi",
+            message: "Name and diamond price are required!",
         });
     }
 
     const parsedDiamondPrice = parseFloat(diamond_price);
     if (isNaN(parsedDiamondPrice) || parsedDiamondPrice < 0) {
         return res.status(400).json({
-            message: "diamond_price harus berupa angka positif",
+            message: "Diamond price must be a positive number",
         });
     }
 
-    const allowedTypes = ["Basic", "Elite", "Special", "Epic", "Legend"];
+    const allowedTypes = ["Basic", "Elite", "Special", "Epic", "Legend", "Starlight"];
     if (skin_type && !allowedTypes.includes(skin_type)) {
-        return res.status(400).json({ message: `skin_type harus salah satu dari: ${allowedTypes.join(", ")}` });
+        return res.status(400).json({ message: `Skin type must be on of these: ${allowedTypes.join(", ")}` });
     }
 
     let processedIsBuyable;
@@ -127,19 +127,23 @@ exports.createSkinForHero = async (req, res) => {
         processedIsBuyable = true;
     }
 
+    if (skin_type === "Starlight") {
+        processedIsBuyable = false;
+    }
+
     if(!image_skin && !req.file) {
-        return res.status(400).json({ message: "Gambar skin wajib diunggah" });
+        return res.status(400).json({ message: "Skin image is required!" });
     }
 
     try {
         const hero = await Hero.findById(id_hero);
         if (!hero) {
-            return res.status(404).json({ message: "Hero tidak ditemukan" });
+            return res.status(404).json({ message: "Hero not found" });
         }
 
         const globallyExistingSkin = await Skin.findOne({ name: name.trim() });
         if (globallyExistingSkin) {
-            return res.status(409).json({ message: "Skin sudah ada" });
+            return res.status(409).json({ message: "Skin has already existed" });
         }
 
         const fileExt = path.extname(image_skin.originalname).toLowerCase();
@@ -157,14 +161,21 @@ exports.createSkinForHero = async (req, res) => {
         const savedSkin = await newSkin.save();
 
         res.status(201).json({
-            message: "Skin berhasil ditambahkan ke hero",
-            skin: savedSkin,
+            message: "Skin created successfully",
+            hero_name: hero.name,
+            skin : {
+                name: savedSkin.name,
+                diamond_price: savedSkin.diamond_price,
+                skin_type: savedSkin.skin_type,
+                isBuyable: savedSkin.isBuyable,
+                image_skin: savedSkin.image_skin
+            }
         });
 
     } catch (error) {
         console.error("Error creating skin:", error);
         if (error.name === 'ValidationError') {
-            return res.status(400).json({ message: "Validasi gagal", errors: error.errors });
+            return res.status(400).json({ message: "Validation error", errors: error.errors });
         }
         res.status(500).json({ message: "Internal Server Error" });
     }

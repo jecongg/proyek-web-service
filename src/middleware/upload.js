@@ -54,7 +54,7 @@ const imageFilter = (req, file, cb) => {
     if (allowedMimeTypes.includes(file.mimetype)) {
         cb(null, true);
     } else {
-        cb(new Error('Format file tidak didukung. Hanya file JPEG, JPG, dan PNG yang diizinkan!'), false);
+        cb(new Error('File format not supported! Only jpeg, jpg, png!'), false);
     }
 };
 
@@ -91,10 +91,10 @@ const uploadSkinImage = multer({
 const handleMulterError = (err, req, res, next) => {
     if (err instanceof multer.MulterError) {
         if (err.code === 'LIMIT_FILE_COUNT') {
-            return res.status(400).json({ message: 'Hanya bisa upload 1 file!' });
+            return res.status(400).json({ message: 'Can only upload 1 file!' });
         }
         if (err.code === 'LIMIT_FILE_SIZE') {
-            return res.status(400).json({ message: 'Ukuran file terlalu besar. Maksimal 5MB!' });
+            return res.status(400).json({ message: 'Maximum file size 5MB!' });
         }
         return res.status(400).json({ message: err.message });
     }

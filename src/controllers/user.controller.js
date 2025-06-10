@@ -33,7 +33,7 @@ exports.getAllUsers = async (req, res) => {
             });
 
         res.json({
-            messages: "Success fetch user!",
+            messages: "Successfully fetched user!",
             count_user: users.length,
             users,
         });
@@ -55,7 +55,7 @@ exports.getUserByUsername = async (req, res) => {
                 populate: { path: "id_hero" },
             });
 
-        if (!user) return res.status(404).json({ message: "User tidak ditemukan" });
+        if (!user) return res.status(404).json({ message: "User not found" });
 
         res.json(user);
     } catch (error) {
@@ -70,7 +70,7 @@ exports.register = async (req, res) => {
     const { error } = userValidation.validate(req.body, { abortEarly: false });
     if (error) {
         return res.status(400).json({
-            message: "Validasi gagal",
+            message: "Validation error",
             errors: error.details.map((err) => err.message),
         });
     }
@@ -81,13 +81,13 @@ exports.register = async (req, res) => {
         //Cek region valid dari API negara
         const regionValid = await isValidRegion(region);
         if (!regionValid) {
-            return res.status(400).json({ message: "Region tidak tersedia!" });
+            return res.status(400).json({ message: "Region is not available!" });
         }
 
         // Cek apakah user sudah ada
         const existingUser = await User.findOne({ email });
         if (existingUser) {
-            return res.status(400).json({ message: "Email sudah digunakan" });
+            return res.status(400).json({ message: "Email is already used!" });
         }
 
         // Hash password
@@ -98,7 +98,7 @@ exports.register = async (req, res) => {
         const layla = await Hero.findOne({ name: 'Layla' });
 
         if (!alucard || !layla) {
-            return res.status(500).json({ message: "Hero default tidak ditemukan" });
+            return res.status(500).json({ message: "Default hero not found!" });
         }
 
         // Buat user baru
@@ -115,9 +115,9 @@ exports.register = async (req, res) => {
         // Simpan ke database
         await newUser.save();
 
-        res.status(201).json({ message: "Registrasi user berhasil!", user: newUser });
+        res.status(201).json({ message: "Successfully registered user!", user: newUser });
     } catch (error) {
-        console.error("Error registrasi user:", error);
+        console.error("Error registrating user:", error);
         res.status(500).json({ message: "Internal Server Error" });
     }
 };
@@ -179,21 +179,21 @@ exports.updateProfile = async (req, res) => {
         // Cek apakah user mencoba mengupdate profile user lain
         if (req.user.id.toString() != id) {
             return res.status(403).json({ 
-                message: "Anda tidak memiliki akses untuk mengupdate profile user lain" 
+                message: "You are not allowed to update this profile" 
             });
         }
 
         // Validasi input
         if (!username && !region && !profilePicture) {
             return res.status(400).json({
-                message: "Minimal satu field harus diisi: username, region, atau profile_picture"
+                message: "Please provide at least one field to update (username, region, or profile picture)"
             });
         }
 
         // Ambil data user saat ini
         const currentUser = await User.findById(id);
         if (!currentUser) {
-            return res.status(404).json({ message: "User tidak ditemukan" });
+            return res.status(404).json({ message: "User not found" });
         }
 
         // Validasi dan proses update username
@@ -202,7 +202,7 @@ exports.updateProfile = async (req, res) => {
                 // Cek diamond untuk ganti username
                 if (currentUser.diamond < 239) {
                     return res.status(400).json({ 
-                        message: "Diamond tidak cukup untuk mengganti username. Diperlukan 239 diamond." 
+                        message: "Diamond is not enough to change username. Required 239 diamonds." 
                     });
                 }
                 // Kurangi diamond
@@ -210,7 +210,7 @@ exports.updateProfile = async (req, res) => {
             }
             else{
                 return res.status(400).json({
-                    message: "Username tidak berubah, tidak perlu update"
+                    message: "Username does not change, no need to update"
                 });
             }
         }
@@ -219,38 +219,23 @@ exports.updateProfile = async (req, res) => {
         if (region) {
             const regionValid = await isValidRegion(region);
             if (!regionValid) {
-                return res.status(400).json({ message: "Region tidak tersedia!" });
+                return res.status(400).json({ message: "Region is not available!" });
             }
 
             if (region !== currentUser.region) {
                 // Cek diamond untuk ganti region
                 if (currentUser.diamond < 300) {
                     return res.status(400).json({ 
-                        message: "Diamond tidak cukup untuk mengganti region. Diperlukan 300 diamond." 
+                        message: "Diamond is not enough to change region. Required 300 diamonds." 
                     });
                 }
-
-                // Cek waktu terakhir update region
-                if (currentUser.last_region_update) {
-                    const lastUpdate = new Date(currentUser.last_region_update);
-                    const now = new Date();
-                    const monthsDiff = (now.getFullYear() - lastUpdate.getFullYear()) * 12 + 
-                                     (now.getMonth() - lastUpdate.getMonth());
-                    
-                    if (monthsDiff < 3) {
-                        return res.status(400).json({ 
-                            message: "Anda harus menunggu 3 bulan dari perubahan region terakhir" 
-                        });
-                    }
-                }
-
                 // Kurangi diamond dan update waktu terakhir
                 currentUser.diamond -= 300;
                 currentUser.last_region_update = new Date();
             }
             else{
                 return res.status(400).json({
-                    message: "Region tidak berubah, tidak perlu update"
+                    message: "Region does not change, no need to update"
                 });
             }
         }
@@ -268,7 +253,7 @@ exports.updateProfile = async (req, res) => {
                 try {
                     fs.unlinkSync(currentUser.profile_picture);
                 } catch (error) {
-                    console.log('File lama tidak ditemukan atau sudah dihapus');
+                    console.log('Last profile picture not found, skipping deletion:', error);
                 }
             }
 
@@ -294,7 +279,7 @@ exports.updateProfile = async (req, res) => {
         ).select('-password');
 
         res.json({
-            message: "Profile berhasil diupdate",
+            message: "Successfully updated profile",
             user: updatedUser
         });
     } catch (error) {
@@ -310,7 +295,7 @@ exports.getPlayerProfile = async (req, res) => {
         // Validasi ObjectId
         if (!mongoose.Types.ObjectId.isValid(id)) {
             return res.status(400).json({ 
-                message: "ID tidak valid. Mohon masukkan ID yang benar" 
+                message: "Invalid user ID format" 
             });
         }
 
@@ -331,7 +316,7 @@ exports.getPlayerProfile = async (req, res) => {
             });
 
         if (!player) {
-            return res.status(404).json({ message: "Pemain tidak ditemukan" });
+            return res.status(404).json({ message: "User not found" });
         }
 
         // Hitung total hero dan skin
@@ -368,7 +353,7 @@ exports.getPlayerProfile = async (req, res) => {
         };
 
         res.json({
-            message: "Berhasil mengambil data profil pemain",
+            message: "Successfully fetched player profile",
             data: response
         });
     } catch (error) {
@@ -388,69 +373,76 @@ exports.play = async (req, res) => {
     try {
         const userId = req.user.id;
         const currentUser = await User.findById(userId).populate('owned_heroes');
-        
+
         if (!currentUser) {
-            return res.status(404).json({ message: "User tidak ditemukan" });
+            return res.status(404).json({ message: "User not found" });
         }
 
         if (currentUser.owned_heroes.length === 0) {
-            return res.status(400).json({ message: "Anda belum memiliki hero" });
+            return res.status(400).json({ message: "You don't have any hero yet!" });
         }
 
         // Dapatkan semua user yang tersedia (exclude current user)
-        const allPlayers = await User.find({ 
+        const allPlayers = await User.find({
             _id: { $ne: userId },
             owned_heroes: { $exists: true, $ne: [] }
         })
-        .select('username owned_heroes');
+        .select('username owned_heroes starlight'); // Tambahkan starlight
 
         if (allPlayers.length < 9) {
-            return res.status(400).json({ message: "Tidak cukup pemain untuk memulai permainan" });
+            return res.status(400).json({ message: "Not enough player to start the game!" });
         }
 
         // Acak urutan player
         const shuffledPlayers = allPlayers.sort(() => Math.random() - 0.5);
 
-        // Bagi menjadi 2 tim (5 untuk team A, 5 untuk team B)
-        const teamAPlayers = shuffledPlayers.slice(0, 4); // 4 player + current user = 5
-        const teamBPlayers = shuffledPlayers.slice(4, 9); // 5 player
+        // Random team untuk current user
+        const currentUserTeam = Math.random() < 0.5 ? 'A' : 'B';
+        const opponentTeam = currentUserTeam === 'A' ? 'B' : 'A';
 
-        // Random pilih hero untuk setiap pemain
+        let teamAPlayers = [];
+        let teamBPlayers = [];
+
+        // Bagi menjadi 2 tim berdasarkan tim random current user
+        if (currentUserTeam === 'A') {
+            teamAPlayers = shuffledPlayers.slice(0, 4); // 4 player + current user = 5
+            teamBPlayers = shuffledPlayers.slice(4, 9); // 5 player
+        } else {
+            teamBPlayers = shuffledPlayers.slice(0, 4); // 4 player + current user = 5
+            teamAPlayers = shuffledPlayers.slice(4, 9); // 5 player
+        }
+
         const matchPlayers = [];
-        
+
         // Hero untuk current user
         const currentUserHero = await getRandomHero(currentUser.owned_heroes);
         matchPlayers.push({
             user: userId,
             hero: currentUserHero,
-            team: 'A',
+            team: currentUserTeam,
+            starlight: currentUser.starlight, // Simpan status starlight
             battle_point_earned: 0,
             experience_earned: 0
         });
 
-        // Hero untuk team A players
-        for (const player of teamAPlayers) {
-            const hero = await getRandomHero(player.owned_heroes);
-            matchPlayers.push({
-                user: player._id,
-                hero: hero,
-                team: 'A',
-                battle_point_earned: 0,
-                experience_earned: 0
-            });
-        }
+        // Fungsi untuk menambahkan player ke match
+        const addPlayersToMatch = async (players, team) => {
+            for (const player of players) {
+                const hero = await getRandomHero(player.owned_heroes);
+                matchPlayers.push({
+                    user: player._id,
+                    hero: hero,
+                    team: team,
+                    starlight: player.starlight, // Simpan status starlight
+                    battle_point_earned: 0,
+                    experience_earned: 0
+                });
+            }
+        };
 
-        // Hero untuk team B players
-        for (const player of teamBPlayers) {
-            const hero = await getRandomHero(player.owned_heroes);
-            matchPlayers.push({
-                user: player._id,
-                hero: hero,
-                team: 'B',
-                battle_point_earned: 0,
-                experience_earned: 0
-            });
-        }
+        // Tambahkan player ke team A dan team B
+        await addPlayersToMatch(teamAPlayers, 'A');
+        await addPlayersToMatch(teamBPlayers, 'B');
 
         // Random pilih pemenang
         const winnerTeam = Math.random() < 0.5 ? 'A' : 'B';
@@ -460,16 +452,31 @@ exports.play = async (req, res) => {
             return Math.floor(Math.random() * (max - min + 1)) + min;
         }
 
-        // Set battle point dan experience berdasarkan menang/kalah
+        // Set battle point dan experience berdasarkan menang/kalah dan status starlight
         matchPlayers.forEach(player => {
-            if (player.team === winnerTeam) {
-                // Range untuk menang: BP 80-120, XP 150-250
-                player.battle_point_earned = getRandomNumber(80, 120);
-                player.experience_earned = getRandomNumber(150, 250);
+            const isWinner = player.team === winnerTeam;
+            const hasStarlight = player.starlight;
+
+            if (isWinner) {
+                if (hasStarlight) {
+                    // Range untuk menang dengan Starlight: BP 150-200, XP 250-350
+                    player.battle_point_earned = getRandomNumber(150, 200);
+                    player.experience_earned = getRandomNumber(250, 350);
+                } else {
+                    // Range untuk menang tanpa Starlight: BP 80-120, XP 150-250
+                    player.battle_point_earned = getRandomNumber(80, 120);
+                    player.experience_earned = getRandomNumber(150, 250);
+                }
             } else {
-                // Range untuk kalah: BP 30-50, XP 50-100
-                player.battle_point_earned = getRandomNumber(30, 50);
-                player.experience_earned = getRandomNumber(50, 100);
+                if (hasStarlight) {
+                    // Range untuk kalah dengan Starlight: BP 60-90, XP 100-150
+                    player.battle_point_earned = getRandomNumber(60, 90);
+                    player.experience_earned = getRandomNumber(100, 150);
+                } else {
+                    // Range untuk kalah tanpa Starlight: BP 30-50, XP 50-100
+                    player.battle_point_earned = getRandomNumber(30, 50);
+                    player.experience_earned = getRandomNumber(50, 100);
+                }
             }
         });
 
@@ -510,18 +517,30 @@ exports.play = async (req, res) => {
 
         // Format response untuk current user
         const currentUserMatchData = populatedMatch.players.find(p => p.user._id.toString() === userId);
-        const teamPlayersData = populatedMatch.players.filter(p => p.team === 'A' && p.user._id.toString() !== userId);
-        const enemyPlayersData = populatedMatch.players.filter(p => p.team === 'B');
+        
+        // Buat daftar player untuk setiap tim
+        const teamAData = populatedMatch.players
+            .filter(p => p.team === 'A')
+            .map(p => ({
+                username: p.user.username,
+                hero: p.hero.name
+            }));
+            
+        const teamBData = populatedMatch.players
+            .filter(p => p.team === 'B')
+            .map(p => ({
+                username: p.user.username,
+                hero: p.hero.name
+            }));
 
         // Hitung XP untuk level berikutnya
         const updatedUser = await User.findById(userId);
         const xpForNextLevel = updatedUser.level * 1000;
-        const xpProgress = updatedUser.experience % xpForNextLevel;
 
         res.json({
-            message: "Permainan selesai",
+            message: "Game played successfully",
             result: {
-                status: currentUserMatchData.team === winnerTeam ? "Menang" : "Kalah",
+                status: currentUserMatchData.team === winnerTeam ? "WIN" : "LOSE",
                 battle_point_earned: currentUserMatchData.battle_point_earned,
                 experience: {
                     earned: currentUserMatchData.experience_earned,
@@ -531,20 +550,8 @@ exports.play = async (req, res) => {
                     xp_for_next_level: xpForNextLevel,
                 },
                 players: {
-                    team_a: [
-                        {
-                            username: currentUser.username,
-                            hero: currentUserMatchData.hero.name
-                        },
-                        ...teamPlayersData.map(p => ({
-                            username: p.user.username,
-                            hero: p.hero.name
-                        }))
-                    ],
-                    team_b: enemyPlayersData.map(p => ({
-                        username: p.user.username,
-                        hero: p.hero.name
-                    }))
+                    team_a: teamAData,
+                    team_b: teamBData
                 }
             }
         });
@@ -562,16 +569,16 @@ exports.softDeleteUser = async (req, res) => {
     const user = await User.findById(id);
 
     if (!user) {
-      return res.status(404).json({ message: "User tidak ditemukan." });
+      return res.status(404).json({ message: "User not found" });
     }
 
     if (user.isDeleted) {
-      return res.status(400).json({ message: "User sudah dihapus sebelumnya." });
+      return res.status(400).json({ message: "User has been deleted before!" });
     }
 
     if(req.user.role === "Player") {
         if(req.user.id.toString() !== id) {
-            return res.status(403).json({ message: "Anda tidak memiliki akses untuk menghapus user ini." });
+            return res.status(403).json({ message: "You don't have any access to delete this user!" });
         }
         else{
             user.isDeleted = true;
@@ -585,11 +592,11 @@ exports.softDeleteUser = async (req, res) => {
         await user.save();
     }
     else {
-        return res.status(403).json({ message: "Hanya admin atau user itu sendiri yang dapat menghapus akun." });
+        return res.status(403).json({ message: "Only admin or himself can delete the account!" });
     }
     
     res.json({
-      message: "User berhasil di-soft delete.",
+      message: "Successfully deleted user",
       user: {
         id: user._id,
         username: user.username,
@@ -597,7 +604,7 @@ exports.softDeleteUser = async (req, res) => {
       },
     });
   } catch (err) {
-    res.status(500).json({ message: "Gagal menghapus user.", error: err.message });
+    res.status(500).json({ message: "Error deleting user", error: err.message });
   }
 };
 exports.getHeroes = async (req, res) => {
@@ -605,7 +612,7 @@ exports.getHeroes = async (req, res) => {
     const userId = req.user.id;
 
     const user = await User.findById(userId);
-    if (!user) return res.status(404).json({ message: "User tidak ditemukan" });
+    if (!user) return res.status(404).json({ message: "User not found" });
 
     const allHeroes = await Hero.find();
 
@@ -621,7 +628,7 @@ exports.getHeroes = async (req, res) => {
     }));
 
     res.json({
-      message: "Berhasil mengambil data hero",
+      message: "Successfully fetched heroes",
       count: result.length,
       heroes: result
     });
@@ -640,7 +647,7 @@ exports.getSkins = async (req, res) => {
       populate: { path: "id_hero", select: "name" }
     });
 
-    if (!user) return res.status(404).json({ message: "User tidak ditemukan" });
+    if (!user) return res.status(404).json({ message: "User not found" });
 
     const allSkins = await mongoose.model("Skin").find().populate("id_hero", "name");
 
@@ -655,7 +662,7 @@ exports.getSkins = async (req, res) => {
     }));
 
     res.json({
-      message: "Berhasil mengambil data skin",
+      message: "Successfully fetched skins",
       count: result.length,
       skins: result
     });

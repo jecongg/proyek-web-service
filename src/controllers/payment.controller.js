@@ -2,6 +2,7 @@ const crypto = require('crypto');
 const { createTransaction } = require("../services/midtrans.service");
 const PaymentHistory = require("../models/PaymentHistory");
 const User = require("../models/User");
+const Skin = require('../models/Skin');
 
 function isSignatureValid(body) {
     const { order_id, status_code, gross_amount, signature_key } = body;
@@ -20,6 +21,14 @@ exports.buyStarlight = async (req, res) => {
 
         // Ambil data user dari database
         const user = await User.findById(userId);
+
+        if (user.starlight) {
+            return res.status(400).json({ message: "You've already obtained Starlight Membership" });
+        }
+
+        if(user.role !== "Player") {
+            return res.status(403).json({ message: "Forbidden: Only players can purchase Starlight Membership" });
+        }
 
         const amount = 150000;
         const orderId = `starlight-${userId}-${Date.now()}`;
@@ -58,13 +67,13 @@ exports.midtransWebhook = async (req, res) => {
     try {
         // Verifikasi signature tetap penting
         if (!isSignatureValid(req.body)) {
-            console.warn('❌ Invalid signature key from Midtrans');
+            console.warn('Invalid signature key from Midtrans');
             return res.status(403).send('Forbidden: Invalid signature');
         }
 
         const { order_id, transaction_status, payment_type, transaction_id } = req.body;
         
-        console.log(`✅ Webhook received for order_id: ${order_id}, status: ${transaction_status}`);
+        console.log(`Webhook received for order_id: ${order_id}, status: ${transaction_status}`);
 
         // SOLUSI: Terima 'capture' ATAU 'settlement' sebagai status berhasil
         if (transaction_status === "capture" || transaction_status === "settlement") {
@@ -80,21 +89,30 @@ exports.midtransWebhook = async (req, res) => {
             
             // Jika pembayaran tidak ditemukan atau sudah diproses, hentikan
             if (!payment) {
-                 console.warn(`⚠️ Payment with order_id: ${order_id} not found.`);
+                 console.warn(`Payment with order_id: ${order_id} not found.`);
                  return res.status(404).send("Payment not found");
             }
 
             // Lakukan pembaruan berdasarkan tipe pembayaran
             if (payment.type === "starlight") {
+                const starlightSkins = await Skin.find({ skin_type: "Starlight" }).select('_id');
+
+                // 2. Ekstrak hanya _id dari setiap skin
+                const skinIds = starlightSkins.map(skin => skin._id);
+
+                // 3. Update status starlight user dan tambahkan semua skin Starlight ke owned_skins
+                // Menggunakan $addToSet untuk menghindari penambahan skin yang mungkin sudah dimiliki
                 await User.findByIdAndUpdate(payment.user_id, {
-                    starlight: true,
+                    $set: { starlight: true },
+                    $addToSet: { owned_skins: { $each: skinIds } }
                 });
-                console.log(`🌟 Starlight purchased for user: ${payment.user_id}`);
+
+                console.log(`Starlight purchased for user: ${payment.user_id}`);
             } else if (payment.type === "topup") {
                 await User.findByIdAndUpdate(payment.user_id, {
                     $inc: { diamond: payment.details.diamond_amount },
                 });
-                console.log(`💎 ${payment.details.diamond_amount} diamonds added for user: ${payment.user_id}`);
+                console.log(`${payment.details.diamond_amount} diamonds added for user: ${payment.user_id}`);
             }
 
             return res.status(200).send("OK: Transaction success processed.");
@@ -122,17 +140,17 @@ exports.buyDiamond = async (req, res) => {
 
         // 2. Validasi input
         if (diamond_amount === undefined) {
-            return res.status(400).json({ message: "Parameter 'diamond_amount' diperlukan." });
+            return res.status(400).json({ message: "Diamond amount is required!" });
         }
 
         const diamondAmountAsNumber = parseInt(diamond_amount, 10);
 
         if (isNaN(diamondAmountAsNumber) || diamondAmountAsNumber <= 0) {
-            return res.status(400).json({ message: "Jumlah diamond harus berupa angka positif." });
+            return res.status(400).json({ message: "Diamond amount must be a positive number" });
         }
 
         if (diamondAmountAsNumber < MINIMUM_DIAMOND_TOPUP) {
-            return res.status(400).json({ message: `Jumlah top-up minimum adalah ${MINIMUM_DIAMOND_TOPUP} diamond.` });
+            return res.status(400).json({ message: `Minimum top up amount is ${MINIMUM_DIAMOND_TOPUP} diamond.` });
         }
         
         // 3. Kalkulasi harga total dalam Rupiah
@@ -141,7 +159,11 @@ exports.buyDiamond = async (req, res) => {
         // 4. Dapatkan data user
         const user = await User.findById(userId);
         if (!user) {
-            return res.status(404).json({ message: "User tidak ditemukan." });
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        if( user.role !== "Player") {
+            return res.status(403).json({ message: "Forbidden: Only players can purchase diamonds" });
         }
         
         // 5. Siapkan detail transaksi
@@ -174,7 +196,7 @@ exports.buyDiamond = async (req, res) => {
     } catch (err) {
         console.error("Diamond top-up error:", err);
         res.status(500).json({
-            message: "Gagal memulai top-up diamond",
+            message: "Failed to initiate diamond top-up",
             error: err.message,
         });
     }
