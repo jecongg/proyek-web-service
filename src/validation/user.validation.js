@@ -7,88 +7,88 @@ const userValidation = Joi.object({
         .max(30)
         .required()
         .messages({
-            "string.empty": "Username wajib diisi",
-            "string.min": "Username minimal 3 karakter",
-            "string.max": "Username maksimal 30 karakter",
-            "any.required": "Username wajib diisi",
+            "string.empty": "Username is required",
+            "string.min": "3 characters minimum for username",
+            "string.max": "30 characters maximum for username",
+            "any.required": "Username is required",
         }),
 
     password: Joi.string()
         .min(6)
         .required()
         .messages({
-            "string.empty": "Password wajib diisi",
-            "string.min": "Password minimal 6 karakter",
-            "any.required": "Password wajib diisi",
+            "string.empty": "Password is required",
+            "string.min": "6 characters minimum for password",
+            "any.required": "Password is required",
         }),
 
     email: Joi.string()
         .email()
         .required()
         .messages({
-            "string.email": "Format email tidak valid",
-            "any.required": "Email wajib diisi",
-            "string.empty": "Email wajib diisi",
+            "string.email": "Email format invalid",
+            "any.required": "Email is required",
+            "string.empty": "Email is required",
         }),
 
     gender: Joi.string()
         .valid("Male", "Female", "Other")
         .required()
         .messages({
-            "any.only": "Gender harus salah satu dari: Male, Female, atau Other",
-            "any.required": "Gender wajib diisi",
-            "string.empty": "Gender wajib diisi",
+            "any.only": "Gender must be one of these : Male, Female, Other",
+            "any.required": "Gender is required",
+            "string.empty": "Gender is required",
         }),
 
     region: Joi.string()
         .required()
         .messages({
-            "string.empty": "Region wajib diisi",
-            "any.required": "Region wajib diisi",
+            "string.empty": "Region is required",
+            "any.required": "Region is required",
         }),
 
     role: Joi.string()
         .valid("Admin", "Player")
         .required()
         .messages({
-            "any.only": "Role harus Admin atau Player",
-            "any.required": "Role wajib diisi",
-            "string.empty": "Role wajib diisi",
+            "any.only": "Role must be either Admin or Player",
+            "any.required": "Role is required",
+            "string.empty": "Role is required",
         }),
 
     diamond: Joi.number()
         .min(0)
         .default(0)
         .messages({
-            "number.base": "Diamond harus berupa angka",
-            "number.min": "Diamond tidak boleh negatif",
+            "number.base": "Diamond must be a number",
+            "number.min": "Diamond cannot be negative",
         }),
 
     starlight: Joi.boolean()
         .default(false)
         .messages({
-            "boolean.base": "Starlight harus berupa true atau false",
+            "boolean.base": "Starlight must be a boolean",
         }),
 
     battle_point: Joi.number()
         .min(0)
         .messages({
-            "number.base": "Battle point harus berupa angka",
-            "number.min": "Battle point tidak boleh negatif",
+            "number.base": "Battle point must be a number",
+            "number.min": "Battle point must be at least 0",
         }),
 
     owned_heroes: Joi.array()
         .items(joiObjectId())
         .messages({
-            "array.base": "Owned heroes harus berupa array",
-            "string.pattern.name": "ID hero tidak valid",
+            "array.base": "Owned heroes must be an array",
+            "string.pattern.name": "Invalid hero ID format",
         }),
 
     owned_skins: Joi.array()
         .items(joiObjectId())
         .messages({
-            "array.base": "Owned skins harus berupa array",
-            "string.pattern.name": "ID skin tidak valid",
+            "array.base": "Owned skins must be an array",
+            "string.pattern.name": "Invalid skin ID format",
         }),
 });
 

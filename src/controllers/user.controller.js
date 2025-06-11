@@ -1,6 +1,6 @@
 const User = require("../models/User");
 const Hero = require("../models/Hero");
-require("../models/Skin");
+const Skin = require("../models/Skin");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const mongoose = require("mongoose");
@@ -66,7 +66,6 @@ exports.getUserByUsername = async (req, res) => {
 
 //Note: Belum selesai
 exports.register = async (req, res) => {
-    // Validasi input dengan Joi
     const { error } = userValidation.validate(req.body, { abortEarly: false });
     if (error) {
         return res.status(400).json({
@@ -78,41 +77,52 @@ exports.register = async (req, res) => {
     const { username, password, email, gender, region, role } = req.body;
 
     try {
-        //Cek region valid dari API negara
         const regionValid = await isValidRegion(region);
         if (!regionValid) {
             return res.status(400).json({ message: "Region is not available!" });
         }
 
-        // Cek apakah user sudah ada
         const existingUser = await User.findOne({ email });
         if (existingUser) {
             return res.status(400).json({ message: "Email is already used!" });
         }
 
-        // Hash password
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Dapatkan ID hero Alucard dan Layla
-        const alucard = await Hero.findOne({ name: 'Alucard' });
-        const layla = await Hero.findOne({ name: 'Layla' });
+        let ownedHeroesIds = [];
+        let ownedSkinsIds = [];
 
-        if (!alucard || !layla) {
-            return res.status(500).json({ message: "Default hero not found!" });
+        if (role === 'Admin') {
+            const allHeroes = await Hero.find({});
+            if (!allHeroes || allHeroes.length === 0) {
+                 return res.status(500).json({ message: "No heroes found in the database!" });
+            }
+            ownedHeroesIds = allHeroes.map(hero => hero._id);
+
+            const allSkins = await Skin.find({});
+            ownedSkinsIds = allSkins.map(skin => skin._id);
+
+        } else {
+            const alucard = await Hero.findOne({ name: 'Alucard' });
+            const layla = await Hero.findOne({ name: 'Layla' });
+
+            if (!alucard || !layla) {
+                return res.status(500).json({ message: "Default hero not found!" });
+            }
+            ownedHeroesIds = [alucard._id, layla._id];
         }
 
-        // Buat user baru
         const newUser = new User({
             username,
             password: hashedPassword,
             email,
             gender,
             region,
-            role: role || "Player", // default ke Player jika tidak diset
-            owned_heroes: [alucard._id, layla._id] // Tambahkan Alucard dan Layla
+            role: role || "Player",
+            owned_heroes: ownedHeroesIds,
+            owned_skins: ownedSkinsIds
         });
 
-        // Simpan ke database
         await newUser.save();
 
         res.status(201).json({ message: "Successfully registered user!", user: newUser });
@@ -125,6 +135,10 @@ exports.register = async (req, res) => {
 
 exports.login = async (req, res) => {
     const { email, password } = req.body;
+
+    if(!email || !password) {
+        return res.status(400).json({ message: "Email and password are required" });
+    }
 
     try {
         // Cek apakah user dengan email tersebut ada
