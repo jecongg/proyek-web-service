@@ -165,7 +165,8 @@ exports.getAllHeroes = async (req, res) => {
         if (req.user.role === "Admin") {
             const heroesWithOwnedStatus = heroes.map(hero => ({
                 ...hero.toObject(),
-                is_owned: true
+                is_owned: true,
+                isBuyable: true
             }));
             return res.json({
                 message: "Successfully fetched heroes!",

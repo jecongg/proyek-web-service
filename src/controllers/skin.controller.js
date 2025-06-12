@@ -10,7 +10,8 @@ exports.getAllSkins = async (req, res) => {
         if (req.user.role === "Admin") {
             const skinsWithOwnedStatus = skins.map(skin => ({
                 ...skin.toObject(),
-                is_owned: true
+                is_owned: true,
+                isBuyable: true // Admins can see all skins as owned
             }));
             return res.json({
                 message: "Successfully fetched skins!",
