@@ -166,7 +166,7 @@ exports.getAllHeroes = async (req, res) => {
             const heroesWithOwnedStatus = heroes.map(hero => ({
                 ...hero.toObject(),
                 is_owned: true,
-                isBuyable: true
+                isBuyable: false
             }));
             return res.json({
                 message: "Successfully fetched heroes!",

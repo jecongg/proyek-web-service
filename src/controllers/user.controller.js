@@ -144,6 +144,11 @@ exports.login = async (req, res) => {
         // Cek apakah user dengan email tersebut ada
         const user = await User.findOne({ email });
 
+        if(user.isDeleted || user.deletedAt) {
+            // Jika user sudah dihapus, kembalikan status 400
+            return res.status(400).json({ message: "User has been deleted!" });
+        }
+
         if (!user) {
             return res.status(400).json({ message: "Invalid credentials" });
         }

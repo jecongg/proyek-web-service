@@ -11,7 +11,7 @@ exports.getAllSkins = async (req, res) => {
             const skinsWithOwnedStatus = skins.map(skin => ({
                 ...skin.toObject(),
                 is_owned: true,
-                isBuyable: true // Admins can see all skins as owned
+                isBuyable: false
             }));
             return res.json({
                 message: "Successfully fetched skins!",
